@@ -1,6 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:get_it/get_it.dart';
 import 'package:dio/dio.dart';
+import 'package:news_app_clean_architecture/features/auth/data/repository/auth_repository_impl.dart';
+import 'package:news_app_clean_architecture/features/auth/domain/repository/auth_repository.dart';
+import 'package:news_app_clean_architecture/features/auth/presentation/bloc/auth_cubit.dart';
 import 'package:news_app_clean_architecture/core/config/api_config.dart';
 import 'package:news_app_clean_architecture/features/daily_news/data/data_sources/remote/firebase_data_source.dart';
 import 'package:news_app_clean_architecture/features/daily_news/data/data_sources/remote/chat_service.dart';
@@ -25,7 +30,13 @@ Future<void> initializeDependencies() async {
   
   // Firebase
   sl.registerSingleton<FirebaseFirestore>(FirebaseFirestore.instance);
+  sl.registerSingleton<FirebaseAuth>(FirebaseAuth.instance);
+  sl.registerSingleton<FirebaseStorage>(FirebaseStorage.instance);
   sl.registerSingleton<FirebaseDataSource>(FirebaseDataSource(sl()));
+
+  // Auth
+  sl.registerSingleton<AuthRepository>(AuthRepositoryImpl(sl()));
+  sl.registerFactory<AuthCubit>(() => AuthCubit(sl()));
 
   // Dio (Local Backend / FastAPI)
   final backendDio = Dio(
@@ -43,7 +54,7 @@ Future<void> initializeDependencies() async {
 
   // Repositories
   sl.registerSingleton<ArticleRepository>(
-    ArticleRepositoryImpl(sl(), sl(), sl())
+    ArticleRepositoryImpl(sl(), sl(), sl(), sl())
   );
   
   // UseCases

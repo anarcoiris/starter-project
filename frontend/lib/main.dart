@@ -7,10 +7,14 @@ import 'package:news_app_clean_architecture/features/daily_news/presentation/blo
 import 'package:news_app_clean_architecture/features/daily_news/presentation/pages/home/daily_news.dart';
 import 'config/theme/app_themes.dart';
 import 'features/daily_news/presentation/bloc/article/remote/remote_article_bloc.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:news_app_clean_architecture/features/auth/presentation/bloc/auth_cubit.dart';
+import 'package:news_app_clean_architecture/features/auth/presentation/pages/login_page.dart';
 import 'injection_container.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: ".env");
   await Firebase.initializeApp();
   await initializeDependencies();
   await probeBackendHealth(sl);
@@ -23,14 +27,17 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider<RemoteArticlesBloc>(
-      create: (context) => sl()..add(const GetArticles()),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<AuthCubit>(create: (context) => sl<AuthCubit>()),
+        BlocProvider<RemoteArticlesBloc>(create: (context) => sl()..add(const GetArticles())),
+      ],
       child: MaterialApp(
           title: 'Symmetry News',
           debugShowCheckedModeBanner: false,
           theme: theme(),
           onGenerateRoute: AppRoutes.onGenerateRoutes,
-          home: const DailyNews()),
+          home: const LoginPage()),
     );
   }
 }

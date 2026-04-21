@@ -12,6 +12,9 @@ class AppRoutes {
       case '/':
         return _materialRoute(const DailyNews());
 
+      case '/DailyNews':
+        return _materialRoute(const DailyNews());
+
       case '/ArticleDetails':
         return _materialRoute(ArticleDetailsView(article: settings.arguments as ArticleEntity));
 

@@ -1,54 +1,43 @@
 # Symmetry App Architecture
 
-Symmetry follows an adaptation of **Clean Architecture** split into three layers
-with strict dependency rules.
+Symmetry follows an adaptation of **Clean Architecture** split into three layers with strict dependency rules, optimized for a **Hybrid Backend** environment.
 
 ---
 
-## Dependency Rules (MUST NOT be violated)
+## Hybrid Backend Strategy
 
-| From \ To       | core | shared | Domain | Data | Presentation |
-|-----------------|------|--------|--------|------|--------------|
-| **Data**        | ✅   | ✅     | ✅     | —    | ❌           |
-| **Domain**      | ❌   | ❌     | —      | ❌   | ❌           |
-| **Presentation**| ✅   | ✅     | ✅     | ❌   | —            |
+A core architectural decision of Symmetry is its resilience through redundancy:
 
-> **Domain is pure Dart.** No Flutter packages, no project imports outside its own folder.
+1.  **Primary API**: FastAPI + MongoDB (Local/Self-hosted).
+2.  **High Availability Fallback**: Firebase Firestore + Firebase Storage.
+3.  **Authentication**: Firebase Authentication.
+4.  **AI Services**: Hybrid (Local Ollama → Fallback to OpenAI GPT-4o-mini).
 
 ---
 
-## Folder Structure
+## Folder Structure (Updated v1.2.0)
 
 ```
 lib/
 ├── config/
-│   ├── routes/          # go_router or Navigator 2 route definitions
-│   └── theme/           # ThemeData, colours, typography
+│   ├── routes/          # Navigator 1 route definitions (AppRoutes)
+│   └── theme/           # Cyber Night Theme Definitions
 │
 ├── core/
-│   ├── constants/       # App-wide constants (API URLs, timeouts, keys)
-│   ├── resources/       # Generic wrappers: DataState<T>, Either<L,R>, Failure
-│   └── usecase/         # Abstract UseCase<Type, Params> base class
+│   ├── constants/       # App-wide constants (API URLs, timeouts)
+│   ├── resources/       # DataState<T> wrappers
+│   └── usecase/         # UseCase base classes
 │
-├── shared/
-│   └── {widget|util}/   # Reusable widgets and utilities (no feature logic)
-│
-└── features/
-    └── {feature}/
-        ├── data/
-        │   ├── data_sources/   # ONLY classes that touch external services
-        │   ├── models/         # Extend domain Entities; handle JSON parsing
-        │   └── repository/     # Implement domain Repository interfaces
-        │
-        ├── domain/
-        │   ├── entities/       # Business objects (pure Dart dataclasses)
-        │   ├── use_cases/      # One file per use case, implements UseCase<T,P>
-        │   └── repository/     # Abstract repository contracts
-        │
-        └── presentation/
-            ├── bloc/           # BLoC and Cubits (import use cases only)
-            ├── screens/        # Full-page widgets
-            └── widgets/        # Feature-specific reusable widgets
+├── features/
+│   ├── auth/            # NEW: Authentication & User Management
+│   │   ├── domain/
+│   │   ├── data/
+│   │   └── presentation/ # LoginPage, WelcomePage (Onboarding)
+│   │
+│   └── daily_news/      # Main Content Feature
+│       ├── data/        # Repository implementations with fallback logic
+│       ├── domain/
+│       └── presentation/ # Feed, ArticleDetail, Publish
 ```
 
 ---
@@ -56,86 +45,43 @@ lib/
 ## Layer Responsibilities
 
 ### Data Layer
-- **data_sources/** — sole point of contact with Firebase, REST APIs,
-  SharedPreferences, etc. Never called directly from presentation.
-- **models/** — extend entities and add `fromJson` / `toJson` / `fromFirestore`.
-- **repository/** — concrete implementations of domain repository interfaces.
+- **data_sources/** — Punto táctico de contacto con APIs (REST/Dio) y Firebase SDKs.
+- **models/** — Extensiones de entidades con lógica de serialización JSON/Firestore.
+- **repository/** — **Orquestadores de Fallback**. Implementan la lógica: *Si falla FastAPI → Consultar Firestore*.
 
-### Domain Layer *(pure Dart)*
-- **entities/** — define the shape of business objects. No parsing, no UI.
-- **use_cases/** — one task per class. Call repository interfaces, never
-  concrete implementations.
-- **repository/** — abstract classes (contracts) fulfilled by the data layer.
+### Domain Layer (Puro Dart)
+- **entities/** — Objetos de negocio (Article, UserEntity).
+- **repository/** — Contratos abstractos que definen qué operaciones son posibles (sin saber de dónde viene la data).
 
 ### Presentation Layer
-- **bloc/** — BLoC / Cubits only import use cases. No direct repo access.
-- **screens/** — compose widgets, listen to BLoC states.
-- **widgets/** — stateless or simple stateful widgets; no business logic.
+- **bloc/cubit/** — Gestión de estados. El `AuthCubit` es global para toda la sesión.
+- **pages/widgets/** — Implementación de la estética **Cyber Night** (Glassmorphism, Neon UI).
 
 ---
 
-## Violations Reference
+## Redundancia de IA (Patrón OPAD)
 
-See `docs/ARCHITECTURE_VIOLATIONS.md` for the full list of forbidden patterns.
-
-Quick reference — these are **always wrong**:
-- Importing a `data/` class from `presentation/`
-- Importing a Flutter package inside `domain/`
-- Calling a data source directly from a BLoC
-- Putting business logic inside a widget
+El `ChatService` implementa una cadena de responsabilidad:
+1.  **Local Intent**: Intenta generar respuesta vía FastAPI (Ollama/Qwen 2.5b).
+2.  **Graceful Fallback**: Ante fallos de conexión o timeout (10s), conmuta a la API de **OpenAI** usando la clave segura cargada desde `.env`.
 
 ---
 
-## Testing Conventions
+## Multimedia Pipeline
 
-The `test/` folder mirrors `lib/` 1-to-1:
-
-```
-test/
-└── features/
-    └── {feature}/
-        ├── data/
-        │   └── repository/          # repository_impl_test.dart
-        ├── domain/
-        │   └── use_cases/           # use_case_test.dart
-        └── presentation/
-            └── bloc/                # cubit_test.dart
-```
-
-Every file in `lib/` that contains logic should have a matching `_test.dart`.
+Las imágenes siguen un flujo de **Autoría Verificada**:
+- `users/{userId}/articles/{articleId}/thumbnail.jpg`
+- Este esquema permite que cada activo multimedia esté vinculado a un autor traceable en el futuro sistema de recompensas.
 
 ---
 
-## Core Abstractions
+## Design System: "Cyber Night"
 
-### `UseCase<Type, Params>`
-```dart
-// core/usecase/usecase.dart
-abstract class UseCase<Type, Params> {
-  Future<DataState<Type>> call(Params params);
-}
-
-class NoParams {}
-```
-
-### `DataState<T>`
-```dart
-// core/resources/data_state.dart
-abstract class DataState<T> {
-  final T? data;
-  final String? error;
-  const DataState({this.data, this.error});
-}
-
-class DataSuccess<T> extends DataState<T> {
-  const DataSuccess(T data) : super(data: data);
-}
-
-class DataFailed<T> extends DataState<T> {
-  const DataFailed(String error) : super(error: error);
-}
-```
+Toda la UI debe adherirse a los tokens de diseño **Cyber Night**:
+- Fondos: `#03050F` (Profundo)
+- Acentos: `#00FFFF` (Cian Neón), `#FF00FF` (Magenta Neón)
+- Transiciones: Animaciones cinéticas inspiradas en el "Cyber Pulse".
 
 ---
 
-*Generated by `generate_structure.py` — Symmetry Engineering*
+*Actualizado 21 de Abril, 2026 — Symmetry Engineering*

@@ -8,7 +8,9 @@ import 'package:news_app_clean_architecture/features/daily_news/domain/entities/
 import 'package:news_app_clean_architecture/features/daily_news/presentation/bloc/article/remote/remote_article_bloc.dart';
 import 'package:news_app_clean_architecture/features/daily_news/presentation/bloc/article/remote/remote_article_event.dart';
 import 'package:news_app_clean_architecture/features/daily_news/presentation/bloc/article/remote/remote_article_state.dart';
-
+import 'package:news_app_clean_architecture/features/auth/presentation/bloc/auth_cubit.dart';
+import 'package:news_app_clean_architecture/features/daily_news/domain/repository/article_repository.dart';
+import 'package:news_app_clean_architecture/injection_container.dart';
 class PublishArticlePage extends StatefulWidget {
   const PublishArticlePage({Key? key}) : super(key: key);
 
@@ -97,7 +99,7 @@ class _PublishArticlePageState extends State<PublishArticlePage> {
     );
   }
 
-  void _onPostPressed() {
+  void _onPostPressed() async {
     if (_titleController.text.trim().isEmpty || _contentController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Por favor, completa el título y el contenido.')),
@@ -105,19 +107,38 @@ class _PublishArticlePageState extends State<PublishArticlePage> {
       return;
     }
 
-    final article = ArticleEntity(
-      author: 'Periodista Symmetry',
-      title: _titleController.text.trim(),
-      description: _contentController.text.trim().split('.').first,
-      content: _contentController.text.trim(),
-      publishedAt: DateTime.now().toIso8601String(),
-      url: 'symmetry://article/${DateTime.now().millisecondsSinceEpoch}',
-      urlToImage: _selectedImage != null 
-          ? 'https://images.unsplash.com/photo-1542281286-9e0a16bb7366?q=80&w=1000' // Mock for now, but should be a real upload
-          : 'https://images.unsplash.com/photo-1504711432869-efd597cdd042?auto=format&fit=crop&q=80&w=1000',
-    );
+    final authState = context.read<AuthCubit>().state;
+    if (authState is! Authenticated) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Debes estar autenticado para publicar.')),
+      );
+      return;
+    }
 
-    context.read<RemoteArticlesBloc>().add(PostArticle(article));
+    try {
+      String imageUrl = 'https://images.unsplash.com/photo-1504711432869-efd597cdd042?auto=format&fit=crop&q=80&w=1000'; // Default
+      
+      if (_selectedImage != null) {
+        // Real upload to Firebase Storage
+        imageUrl = await sl<ArticleRepository>().uploadImage(_selectedImage!, authState.user.uid);
+      }
+
+      final article = ArticleEntity(
+        author: authState.user.displayName ?? 'Agente Symmetry',
+        title: _titleController.text.trim(),
+        description: _contentController.text.trim().split('.').first,
+        content: _contentController.text.trim(),
+        publishedAt: DateTime.now().toIso8601String(),
+        url: 'symmetry://article/${DateTime.now().millisecondsSinceEpoch}',
+        urlToImage: imageUrl,
+      );
+
+      context.read<RemoteArticlesBloc>().add(PostArticle(article));
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error al subir imagen: $e'), backgroundColor: Colors.redAccent),
+      );
+    }
   }
 
   Widget _buildTitleInput() {

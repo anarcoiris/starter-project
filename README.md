@@ -35,9 +35,11 @@ Now, let us start with the instructions...
 First, you will need to install and understand the technologies that this project uses.
 
 ## Technologies Used
-- [Firebase](https://firebase.google.com/)
-- [Flutter](https://docs.flutter.dev/)
-- [Flutter BLoc](https://bloclibrary.dev/)
+- [FastAPI](https://fastapi.tiangolo.com/) (Main Backend)
+- [MongoDB](https://www.mongodb.com/) (Main Database)
+- [Firebase](https://firebase.google.com/) (Alternative Backend)
+- [Flutter](https://docs.flutter.dev/) (Frontend)
+- [Flutter BLoc](https://bloclibrary.dev/) (State Management)
 
 Please understand that it does not matter at all whether you know about these technologies or not. In fact, in an ideal world you don't know anything about them and can learn them over the course of the next 72 hours and deliver an incredible project. This is an ideal situation since it will allow you to showcase your capacity to learn new technologies fast and deliver good solutions with the knowledge aquired which is exactly what we are looking for.
 
@@ -71,7 +73,17 @@ Therefore, this will be the functionality that you will be writing over the next
 
 ## 1. THE BACKEND 
 First, we will build the backend of the project. 
-For this, you will use [Firebase Firestore](https://firebase.google.com/docs/firestore).
+
+### Option A: FastAPI + MongoDB (Recommended)
+This is our modern stack. It uses a custom REST API built with FastAPI and a MongoDB database.
+- Read the [Backend Specs](./docs/specs/11_backend_architecture.md)
+- Check the [Data Model](./docs/specs/12_data_model.md)
+- Setup instructions in [backend/fastapi/README.md](./backend/fastapi/README.md)
+
+### Option B: Firebase Firestore (Alternative)
+The original project was built on Firebase. You can still use it if you prefer a serverless approach.
+- See original [Firebase Docs](./backend/README.md)
+- As of 20th April 2026, Firebase proposed link as not accesible from my location. You may use [this](https://firebase.google.com/docs/firestore/quickstart) instead.
 
 #### 1.1 THE SCHEMA
 Before you even get to actually building the backend in Firestore, you must create the schema for the Articles you will store in the database.
@@ -161,14 +173,24 @@ This is only extra so it's fine if you don't want to do it.
 # Index
 This index contains all the links to the project's documentation.
 
-**Frontend Documentation**
-[Understanding the Frontend and getting started](./frontend/README.md)
+**Architecture & Design**
+1. [Our App Architecture](./docs/architecture/APP_ARCHITECTURE.md)
+2. [Design System (Cyber Night)](./docs/architecture/DESIGN_SYSTEM.md)
+3. [Architecture Violations](./docs/architecture/ARCHITECTURE_VIOLATIONS.md)
+4. [Code Quality Guidelines](./docs/architecture/CODING_GUIDELINES.md)
 
-**Backend Documentation**
-[Understanding the Backend and getting started](./backend/README.md)
+**Technical Specs (The "Beast" Specs)**
+- [Backend Architecture](./docs/specs/11_backend_architecture.md)
+- [Data Model & Schema](./docs/specs/12_data_model.md)
+- [Roadmap & Phases](./docs/specs/14_roadmap.md)
+- [Full Specs Directory](./docs/specs/)
 
-**Contributions and Violations**
-1. [Contribution Guidelines](./docs/project/CONTRIBUTION_GUIDELINES.md)
-2. [Architecture Violations](./docs/architecture/ARCHITECTURE_VIOLATIONS.md)
-3. [Code Quality Violations](./docs/architecture/CODING_GUIDELINES.md)
-4. [Our App Architecture](./docs/architecture/APP_ARCHITECTURE.md)
+**Project Management**
+- [Phase 1 Backlog](./docs/project/PHASE1_BACKLOG.md)
+- [Project Vision](./docs/project/PROJECT_VISION.md)
+- [Contribution Guidelines](./docs/project/CONTRIBUTION_GUIDELINES.md)
+
+**Getting Started**
+- [Frontend Setup](./frontend/README.md)
+- [FastAPI Setup](./backend/fastapi/README.md)
+- [Firebase Setup (Alternative)](./backend/README.md)
