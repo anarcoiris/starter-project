@@ -5,7 +5,6 @@ class ApiConfig {
 
   static const String backendBaseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    // Puerto host 9000 (api/docker-compose.yml); evita choque con otros servicios en :8000.
-    defaultValue: 'http://127.0.0.1:9000',
+    defaultValue: 'https://uncovernews.ddns.net/api/v1',
   );
 }

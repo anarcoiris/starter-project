@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:ionicons/ionicons.dart';
-import '../../../../../injection_container.dart';
-import '../../../domain/entities/article.dart';
-import '../../bloc/article/local/local_article_bloc.dart';
-import '../../bloc/article/local/local_article_event.dart';
+import 'package:news_app_clean_architecture/injection_container.dart';
+import 'package:news_app_clean_architecture/core/constants/app_colors.dart';
+import 'package:news_app_clean_architecture/features/daily_news/domain/entities/article.dart';
+import 'package:news_app_clean_architecture/features/daily_news/presentation/bloc/article/local/local_article_bloc.dart';
+import 'package:news_app_clean_architecture/features/daily_news/presentation/bloc/article/local/local_article_event.dart';
 
 class ArticleDetailsView extends HookWidget {
   final ArticleEntity? article;
@@ -17,32 +19,38 @@ class ArticleDetailsView extends HookWidget {
     return BlocProvider(
       create: (_) => sl<LocalArticleBloc>(),
       child: Scaffold(
-        appBar: _buildAppBar(),
-        body: _buildBody(),
+        appBar: _buildAppBar(context),
+        body: _buildBody(context),
         floatingActionButton: _buildFloatingActionButton(),
       ),
     );
   }
 
-  PreferredSizeWidget _buildAppBar() {
+  PreferredSizeWidget _buildAppBar(BuildContext context) {
     return AppBar(
-      leading: Builder(
-        builder: (context) => GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTap: () => _onBackButtonTapped(context),
-          child: const Icon(Ionicons.chevron_back, color: Colors.black),
-        ),
+      leading: IconButton(
+        onPressed: () => Navigator.pop(context),
+        icon: const Icon(Ionicons.chevron_back, color: AppColors.primary),
       ),
+      actions: [
+        IconButton(
+          onPressed: () {},
+          icon: const Icon(Ionicons.share_social_outline),
+        ),
+        const SizedBox(width: 8),
+      ],
     );
   }
 
-  Widget _buildBody() {
+  Widget _buildBody(BuildContext context) {
     return SingleChildScrollView(
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildArticleTitleAndDate(),
           _buildArticleImage(),
-          _buildArticleDescription(),
+          _buildArticleContent(context),
+          const SizedBox(height: 100),
         ],
       ),
     );
@@ -50,31 +58,37 @@ class ArticleDetailsView extends HookWidget {
 
   Widget _buildArticleTitleAndDate() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 22),
+      padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 10),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Title
           Text(
-            article!.title!,
+            article!.title ?? '',
             style: const TextStyle(
-                fontFamily: 'Butler',
-                fontSize: 20,
-                fontWeight: FontWeight.w900),
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textHeadline,
+                height: 1.3),
           ),
-
-          const SizedBox(height: 14),
-          // DateTime
+          const SizedBox(height: 16),
           Row(
             children: [
-              const Icon(Ionicons.time_outline, size: 16),
+              const Icon(Ionicons.person_circle_outline, size: 20, color: AppColors.primary),
+              const SizedBox(width: 6),
+              Text(
+                article!.author ?? 'Periodista Symmetry',
+                style: const TextStyle(fontSize: 14, color: Colors.white70, fontWeight: FontWeight.w600),
+              ),
+              const Spacer(),
+              const Icon(Ionicons.time_outline, size: 16, color: AppColors.textMuted),
               const SizedBox(width: 4),
               Text(
-                article!.publishedAt!,
-                style: const TextStyle(fontSize: 12),
+                article!.publishedAt?.split('T')[0] ?? '',
+                style: const TextStyle(fontSize: 12, color: AppColors.textMuted),
               ),
             ],
           ),
+          const Divider(height: 32, color: Colors.white10),
         ],
       ),
     );
@@ -84,40 +98,73 @@ class ArticleDetailsView extends HookWidget {
     return Container(
       width: double.maxFinite,
       height: 250,
-      margin: const EdgeInsets.only(top: 14),
-      child: Image.network(article!.urlToImage!, fit: BoxFit.cover),
+      decoration: BoxDecoration(
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withOpacity(0.1),
+            blurRadius: 30,
+            spreadRadius: -10,
+          )
+        ]
+      ),
+      child: Image.network(
+        article!.urlToImage ?? '', 
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => Container(color: AppColors.surface),
+      ),
     );
   }
 
-  Widget _buildArticleDescription() {
+  Widget _buildArticleContent(BuildContext context) {
+    final String markdownContent = """
+## Resumen
+${article!.description ?? ''}
+
+---
+
+${article!.content ?? ''}
+
+> Nota del Editor: Este contenido ha sido verificado mediante el protocolo de consenso Symmetry.
+""";
+
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 18),
-      child: Text(
-        '${article!.description ?? ''}\n\n${article!.content ?? ''}',
-        style: const TextStyle(fontSize: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+      child: MarkdownBody(
+        data: markdownContent,
+        selectable: true,
+        styleSheet: MarkdownStyleSheet(
+          p: const TextStyle(fontSize: 17, color: AppColors.textBody, height: 1.6),
+          h2: const TextStyle(fontSize: 20, color: AppColors.primary, fontWeight: FontWeight.bold),
+          blockquoteDecoration: BoxDecoration(
+            color: AppColors.surface,
+            border: const Border(left: BorderSide(color: AppColors.primary, width: 4)),
+            borderRadius: BorderRadius.circular(4)
+          ),
+          blockquotePadding: const EdgeInsets.all(16),
+          horizontalRuleDecoration: BoxDecoration(
+            border: Border(top: BorderSide(color: AppColors.primary.withOpacity(0.2), width: 1))
+          )
+        ),
       ),
     );
   }
 
   Widget _buildFloatingActionButton() {
     return Builder(
-      builder: (context) => FloatingActionButton(
+      builder: (context) => FloatingActionButton.extended(
         onPressed: () => _onFloatingActionButtonPressed(context),
-        child: const Icon(Ionicons.bookmark, color: Colors.white),
+        icon: const Icon(Ionicons.bookmark, color: Colors.black),
+        label: const Text('Guardar', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
       ),
     );
-  }
-
-  void _onBackButtonTapped(BuildContext context) {
-    Navigator.pop(context);
   }
 
   void _onFloatingActionButtonPressed(BuildContext context) {
     BlocProvider.of<LocalArticleBloc>(context).add(SaveArticle(article!));
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        backgroundColor: Colors.black,
-        content: Text('Article saved successfully.'),
+        backgroundColor: AppColors.surface,
+        content: Text('Artículo guardado en la red local.', style: TextStyle(color: AppColors.primary)),
       ),
     );
   }
