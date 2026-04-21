@@ -1,8 +1,8 @@
-\# 01\_TOKENOMICS.md
+# 01_TOKENOMICS.md
 
 
 
-\## 1. Purpose
+## 1. Purpose
 
 
 
@@ -12,21 +12,21 @@ Este documento define el modelo económico del sistema propuesto para la aplicac
 
 ⚠️ Importante:  
 
-Esta capa \*\*NO es requisito del assignment base\*\*, pero se incluye como extensión ("overdelivery") alineada con los valores del proyecto:
+Esta capa **NO es requisito del assignment base**, pero se incluye como extensión ("overdelivery") alineada con los valores del proyecto:
 
-\- pensamiento crítico,
+- pensamiento crítico,
 
-\- diseño de sistemas,
+- diseño de sistemas,
 
-\- y propuesta de mejora del producto.
-
-
-
-\---
+- y propuesta de mejora del producto.
 
 
 
-\## 2. Design Principles
+---
+
+
+
+## 2. Design Principles
 
 
 
@@ -34,99 +34,99 @@ La tokenomics se diseña bajo los siguientes principios:
 
 
 
-\### 2.1 Anti-abuse first
+### 2.1 Anti-abuse first
 
 El sistema no debe ser explotable mediante:
 
-\- bots,
+- bots,
 
-\- granjas de clics,
+- granjas de clics,
 
-\- consumo pasivo artificial.
+- consumo pasivo artificial.
 
 
 
-\### 2.2 Sustainable emission
+### 2.2 Sustainable emission
 
 La emisión debe:
 
-\- ser predecible,
+- ser predecible,
 
-\- decreciente en el tiempo,
+- decreciente en el tiempo,
 
-\- y evitar shocks bruscos de oferta.
+- y evitar shocks bruscos de oferta.
 
 
 
-\### 2.3 Real utility
+### 2.3 Real utility
 
 El token debe tener usos reales dentro del sistema:
 
-\- visibilidad,
+- visibilidad,
 
-\- promoción,
+- promoción,
 
-\- features premium,
+- features premium,
 
-\- participación en gobernanza futura.
+- participación en gobernanza futura.
 
 
 
-\### 2.4 Circular economy
+### 2.4 Circular economy
 
 El valor debe reciclarse dentro del sistema:
 
-\- anunciantes → gastan tokens  
+- anunciantes → gastan tokens  
 
-\- usuarios → reciben tokens por actividad válida  
-
-
-
-\---
+- usuarios → reciben tokens por actividad válida  
 
 
 
-\## 3. Supply Model
+---
 
 
 
-\### 3.1 Initial Supply
+## 3. Supply Model
 
 
 
-\- \*\*Max supply (pre-tail):\*\* 110,000,000 tokens  
+### 3.1 Initial Supply
 
-\- \*\*Premine total:\*\* 10,000,000 tokens  
+
+
+- **Max supply (pre-tail):** 110,000,000 tokens  
+
+- **Premine total:** 10,000,000 tokens  
 
 
 
 Distribución del premine:
 
-\- 5,000,000 → disponibles desde el inicio  
+- 5,000,000 → disponibles desde el inicio  
 
-\- 5,000,000 → bloqueados durante 24 meses  
-
-
-
-\### 3.2 Community Allocation
+- 5,000,000 → bloqueados durante 24 meses  
 
 
 
-\- \*\*Supply destinado a usuarios:\*\* 100,000,000 tokens  
-
-\- Distribución progresiva mediante emisión semanal  
+### 3.2 Community Allocation
 
 
 
-\---
+- **Supply destinado a usuarios:** 100,000,000 tokens  
+
+- Distribución progresiva mediante emisión semanal  
 
 
 
-\## 4. Emission Model
+---
 
 
 
-\### 4.1 Weekly Emission
+## 4. Emission Model
+
+
+
+### 4.1 Weekly Emission
 
 
 
@@ -138,13 +138,13 @@ Cada ciclo semanal incluye:
 
 
 
-\- emisión nueva del protocolo  
+- emisión nueva del protocolo  
 
-\- + redistribución de fees (publicidad, boosts, etc.)
+- + redistribución de fees (publicidad, boosts, etc.)
 
 
 
-\### 4.2 Smooth Decay (Anti-shock)
+### 4.2 Smooth Decay (Anti-shock)
 
 
 
@@ -152,23 +152,23 @@ En lugar de halvings abruptos, la emisión sigue una curva suave:
 
 
 
-\- equivalente a un halving cada 2 años  
+- equivalente a un halving cada 2 años  
 
-\- pero implementado como reducción progresiva semanal  
+- pero implementado como reducción progresiva semanal  
 
 
 
 Esto evita:
 
-\- picos de oferta,
+- picos de oferta,
 
-\- shocks de mercado,
+- shocks de mercado,
 
-\- comportamientos especulativos predecibles.
+- comportamientos especulativos predecibles.
 
 
 
-\### 4.3 Emission Behavior
+### 4.3 Emission Behavior
 
 
 
@@ -176,21 +176,21 @@ La emisión cumple:
 
 
 
-\- decreciente en el tiempo  
+- decreciente en el tiempo  
 
-\- continua (sin saltos)  
+- continua (sin saltos)  
 
-\- auditable  
+- auditable  
 
-\- determinista  
-
-
-
-\---
+- determinista  
 
 
 
-\## 5. Distribution Logic
+---
+
+
+
+## 5. Distribution Logic
 
 
 
@@ -202,33 +202,33 @@ weekly\_pool = emission + collected\_fees
 
 
 
-\### 5.1 Emission
+### 5.1 Emission
 
 Nuevos tokens creados según el modelo definido.
 
 
 
-\### 5.2 Fees
+### 5.2 Fees
 
 Tokens ya existentes que provienen de:
 
-\- publicidad
+- publicidad
 
-\- promoción de contenido
+- promoción de contenido
 
-\- boosts
-
-
-
-👉 Las fees \*\*no aumentan el supply\*\*, solo redistribuyen valor.
+- boosts
 
 
 
-\---
+👉 Las fees **no aumentan el supply**, solo redistribuyen valor.
 
 
 
-\## 6. Reward Allocation
+---
+
+
+
+## 6. Reward Allocation
 
 
 
@@ -240,15 +240,15 @@ Distribución inicial sugerida:
 
 
 
-\- 55% → lectura verificada  
+- 55% → lectura verificada  
 
-\- 15% → comentarios útiles  
+- 15% → comentarios útiles  
 
-\- 10% → feedback y moderación  
+- 10% → feedback y moderación  
 
-\- 10% → diversidad de consumo  
+- 10% → diversidad de consumo  
 
-\- 10% → creación de contenido  
+- 10% → creación de contenido  
 
 
 
@@ -256,11 +256,11 @@ Distribución inicial sugerida:
 
 
 
-\---
+---
 
 
 
-\## 7. Token Utility
+## 7. Token Utility
 
 
 
@@ -268,43 +268,43 @@ El token se utiliza dentro del sistema para:
 
 
 
-\### 7.1 Promoción
+### 7.1 Promoción
 
-\- destacar artículos  
+- destacar artículos  
 
-\- aumentar visibilidad  
-
-
-
-\### 7.2 Publicidad
-
-\- compra de exposición  
-
-\- campañas segmentadas  
+- aumentar visibilidad  
 
 
 
-\### 7.3 Features premium
+### 7.2 Publicidad
 
-\- acceso a funciones avanzadas  
+- compra de exposición  
 
-\- análisis más profundos  
-
-
-
-\### 7.4 Futuro: Gobernanza
-
-\- votaciones sobre parámetros del sistema  
-
-\- decisiones económicas clave  
+- campañas segmentadas  
 
 
 
-\---
+### 7.3 Features premium
+
+- acceso a funciones avanzadas  
+
+- análisis más profundos  
 
 
 
-\## 8. Tail Emission (Deferred Decision)
+### 7.4 Futuro: Gobernanza
+
+- votaciones sobre parámetros del sistema  
+
+- decisiones económicas clave  
+
+
+
+---
+
+
+
+## 8. Tail Emission (Deferred Decision)
 
 
 
@@ -312,7 +312,7 @@ La emisión posterior al supply inicial no está definida desde el inicio.
 
 
 
-\### 8.1 Governance Window
+### 8.1 Governance Window
 
 
 
@@ -320,21 +320,21 @@ Durante los últimos 4 años del ciclo inicial:
 
 
 
-\- se abrirá una votación  
+- se abrirá una votación  
 
-\- basada en stakeholding  
-
-
-
-\### 8.2 Voting Model
+- basada en stakeholding  
 
 
 
-\- 1 token = 1 voto  
+### 8.2 Voting Model
 
 
 
-\### 8.3 Decision Scope
+- 1 token = 1 voto  
+
+
+
+### 8.3 Decision Scope
 
 
 
@@ -342,23 +342,23 @@ La comunidad decidirá:
 
 
 
-\- activar o no tail emission  
+- activar o no tail emission  
 
-\- porcentaje de inflación  
+- porcentaje de inflación  
 
-\- reglas de distribución  
-
-
-
-\---
+- reglas de distribución  
 
 
 
-\## 9. Risks
+---
 
 
 
-\### 9.1 Inflation risk
+## 9. Risks
+
+
+
+### 9.1 Inflation risk
 
 Si la emisión supera la demanda:
 
@@ -366,7 +366,7 @@ Si la emisión supera la demanda:
 
 
 
-\### 9.2 Abuse risk
+### 9.2 Abuse risk
 
 Si el sistema de rewards es explotable:
 
@@ -374,7 +374,7 @@ Si el sistema de rewards es explotable:
 
 
 
-\### 9.3 Governance risk
+### 9.3 Governance risk
 
 Modelo 1 token = 1 voto puede generar:
 
@@ -382,11 +382,11 @@ Modelo 1 token = 1 voto puede generar:
 
 
 
-\---
+---
 
 
 
-\## 10. Scope Disclaimer
+## 10. Scope Disclaimer
 
 
 
@@ -394,21 +394,21 @@ Este sistema económico:
 
 
 
-\- no es necesario para completar el assignment base  
+- no es necesario para completar el assignment base  
 
-\- no se implementará completamente en el MVP  
+- no se implementará completamente en el MVP  
 
-\- se propone como extensión conceptual y futura  
+- se propone como extensión conceptual y futura  
 
 
 
 El foco principal del proyecto sigue siendo:
 
-\- backend funcional  
+- backend funcional  
 
-\- frontend en Flutter  
+- frontend en Flutter  
 
-\- arquitectura limpia  
+- arquitectura limpia  
 
-\- y calidad de código  
+- y calidad de código  
 

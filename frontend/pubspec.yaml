@@ -33,6 +33,7 @@ dependencies:
   floor: any
 
   #make request to api
+  dio: ^4.0.6
   retrofit: ^3.0.1
 
   # Firebase

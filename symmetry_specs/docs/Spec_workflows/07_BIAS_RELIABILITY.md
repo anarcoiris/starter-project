@@ -1,8 +1,8 @@
-\# 07\_BIAS\_RELIABILITY.md
+# 07_BIAS_RELIABILITY.md
 
 
 
-\## 1. Purpose
+## 1. Purpose
 
 
 
@@ -10,21 +10,21 @@ Este documento define cómo evaluar y presentar:
 
 
 
-\- la fiabilidad de las fuentes,
+- la fiabilidad de las fuentes,
 
-\- y posibles sesgos en la cobertura de noticias.
-
-
-
-Este módulo es una \*\*extensión avanzada (overdelivery)\*\* y no es requisito del assignment base.
+- y posibles sesgos en la cobertura de noticias.
 
 
 
-\---
+Este módulo es una **extensión avanzada (overdelivery)** y no es requisito del assignment base.
 
 
 
-\## 2. Objective
+---
+
+
+
+## 2. Objective
 
 
 
@@ -32,49 +32,49 @@ El objetivo NO es determinar una “verdad absoluta”, sino:
 
 
 
-\- proporcionar contexto adicional,
+- proporcionar contexto adicional,
 
-\- ayudar al usuario a comparar fuentes,
+- ayudar al usuario a comparar fuentes,
 
-\- y reducir la formación de cámaras de eco.
-
-
-
-\---
+- y reducir la formación de cámaras de eco.
 
 
 
-\## 3. Core Principles
+---
 
 
 
-\### 3.1 No absolute truth score
+## 3. Core Principles
+
+
+
+### 3.1 No absolute truth score
 
 No existe un único score que determine la verdad.
 
 
 
-\### 3.2 Multi-dimensional analysis
+### 3.2 Multi-dimensional analysis
 
 La evaluación se basa en múltiples factores.
 
 
 
-\### 3.3 Transparency
+### 3.3 Transparency
 
 El usuario debe entender:
 
-\- por qué se muestra una señal,
+- por qué se muestra una señal,
 
-\- y qué significa.
-
-
-
-\---
+- y qué significa.
 
 
 
-\## 4. Reliability Model
+---
+
+
+
+## 4. Reliability Model
 
 
 
@@ -82,79 +82,79 @@ La fiabilidad se evalúa mediante varios ejes:
 
 
 
-\### 4.1 Source Transparency
+### 4.1 Source Transparency
 
-\- ¿la fuente identifica autores?
+- ¿la fuente identifica autores?
 
-\- ¿explica su metodología?
-
-
-
-\### 4.2 Citation Quality
-
-\- uso de fuentes primarias  
-
-\- enlaces verificables  
+- ¿explica su metodología?
 
 
 
-\### 4.3 Correction History
+### 4.2 Citation Quality
 
-\- historial de correcciones  
+- uso de fuentes primarias  
 
-\- política editorial  
-
-
-
-\### 4.4 Content Type
-
-\- noticia vs opinión  
-
-\- análisis vs editorial  
+- enlaces verificables  
 
 
 
-\---
+### 4.3 Correction History
+
+- historial de correcciones  
+
+- política editorial  
 
 
 
-\## 5. Bias Model
+### 4.4 Content Type
+
+- noticia vs opinión  
+
+- análisis vs editorial  
 
 
 
-El sesgo se analiza como \*\*tendencias\*\*, no como etiquetas absolutas.
+---
 
 
 
-\### 5.1 Topic Framing
-
-\- qué aspectos se enfatizan  
-
-\- qué aspectos se omiten  
+## 5. Bias Model
 
 
 
-\### 5.2 Language Tone
-
-\- lenguaje emocional  
-
-\- lenguaje neutral  
+El sesgo se analiza como **tendencias**, no como etiquetas absolutas.
 
 
 
-\### 5.3 Source Diversity
+### 5.1 Topic Framing
 
-\- número de perspectivas citadas  
+- qué aspectos se enfatizan  
 
-\- homogeneidad ideológica  
-
-
-
-\---
+- qué aspectos se omiten  
 
 
 
-\## 6. Scoring Strategy
+### 5.2 Language Tone
+
+- lenguaje emocional  
+
+- lenguaje neutral  
+
+
+
+### 5.3 Source Diversity
+
+- número de perspectivas citadas  
+
+- homogeneidad ideológica  
+
+
+
+---
+
+
+
+## 6. Scoring Strategy
 
 
 
@@ -186,7 +186,7 @@ bias = {
 
 }
 
-7\. UI Representation
+7. UI Representation
 
 
 
@@ -212,7 +212,7 @@ Ejemplo:
 
 “Uso limitado de fuentes externas”
 
-8\. Article-Level vs Source-Level
+8. Article-Level vs Source-Level
 
 8.1 Source-Level
 
@@ -228,7 +228,7 @@ Ambos deben coexistir.
 
 
 
-9\. Data Sources
+9. Data Sources
 
 
 
@@ -244,7 +244,7 @@ historial de la fuente
 
 feedback de usuarios
 
-10\. LLM Integration
+10. LLM Integration
 
 
 
@@ -264,7 +264,7 @@ señalar contradicciones
 
 
 
-11\. Avoiding Misuse
+11. Avoiding Misuse
 
 Riesgos:
 
@@ -282,7 +282,7 @@ mostrar múltiples dimensiones
 
 evitar juicios categóricos
 
-12\. Feedback Loop
+12. Feedback Loop
 
 
 
@@ -306,7 +306,7 @@ scores dinámicos
 
 reputación de fuentes
 
-13\. Reputation Coupling
+13. Reputation Coupling
 
 
 
@@ -320,7 +320,7 @@ ranking en el feed
 
 acceso a promoción
 
-14\. Risks
+14. Risks
 
 14.1 Subjectivity
 
@@ -346,7 +346,7 @@ Demasiada información puede confundir.
 
 
 
-15\. MVP Strategy
+15. MVP Strategy
 
 
 
@@ -366,7 +366,7 @@ scoring complejo
 
 modelos NLP avanzados
 
-16\. Alignment with Assignment
+16. Alignment with Assignment
 
 
 
@@ -384,7 +384,7 @@ diseño de sistemas
 
 sensibilidad al problema real de noticias
 
-17\. Scope Disclaimer
+17. Scope Disclaimer
 
 
 

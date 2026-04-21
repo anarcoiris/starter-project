@@ -1,8 +1,8 @@
-\# 04\_ANTIFRAUD.md
+# 04_ANTIFRAUD.md
 
 
 
-\## 1. Purpose
+## 1. Purpose
 
 
 
@@ -14,19 +14,19 @@ El objetivo es:
 
 
 
-\- proteger la economía de tokens,
+- proteger la economía de tokens,
 
-\- garantizar recompensas justas,
+- garantizar recompensas justas,
 
-\- y evitar explotación mediante automatización o comportamiento no humano.
+- y evitar explotación mediante automatización o comportamiento no humano.
 
+## 1.1 Modo degradado (Fase 1)
 
+Antes de disponer de señales completas (heurísticas, dispositivo, reputación cruzada), el sistema puede operar en **modo mínimo**: rate limiting básico en API, validación de JWT, y almacenamiento de eventos para análisis posterior. Las secciones avanzadas de este documento aplican a fases posteriores. Ver [PHASE1_BACKLOG.md](../PHASE1_BACKLOG.md).
 
-\---
+---
 
-
-
-\## 2. Threat Model
+## 2. Threat Model
 
 
 
@@ -34,29 +34,29 @@ El sistema debe asumir que será atacado desde el primer día.
 
 
 
-\### 2.1 Tipos de abuso esperados
+### 2.1 Tipos de abuso esperados
 
 
 
-\- bots leyendo artículos automáticamente  
+- bots leyendo artículos automáticamente  
 
-\- granjas de dispositivos  
+- granjas de dispositivos  
 
-\- scripts de scroll automático  
+- scripts de scroll automático  
 
-\- generación masiva de cuentas  
+- generación masiva de cuentas  
 
-\- spam de comentarios  
+- spam de comentarios  
 
-\- manipulación de métricas de engagement  
-
-
-
-\---
+- manipulación de métricas de engagement  
 
 
 
-\## 3. Anti-Fraud Strategy Overview
+---
+
+
+
+## 3. Anti-Fraud Strategy Overview
 
 
 
@@ -64,35 +64,35 @@ El sistema se basa en 4 capas:
 
 
 
-\### 3.1 Detection
+### 3.1 Detection
 
 Identificar patrones sospechosos.
 
 
 
-\### 3.2 Scoring
+### 3.2 Scoring
 
 Asignar un `fraudScore` a cada usuario.
 
 
 
-\### 3.3 Mitigation
+### 3.3 Mitigation
 
 Reducir o eliminar rewards.
 
 
 
-\### 3.4 Enforcement
+### 3.4 Enforcement
 
 Aplicar restricciones o penalizaciones.
 
 
 
-\---
+---
 
 
 
-\## 4. Behavioral Analysis
+## 4. Behavioral Analysis
 
 
 
@@ -100,43 +100,43 @@ El antifraude se basa principalmente en comportamiento.
 
 
 
-\### 4.1 Señales humanas típicas
+### 4.1 Señales humanas típicas
 
 
 
-\- variación en tiempos de lectura  
+- variación en tiempos de lectura  
 
-\- scroll no lineal  
+- scroll no lineal  
 
-\- pausas naturales  
+- pausas naturales  
 
-\- interacción irregular  
+- interacción irregular  
 
-\- consumo diverso  
-
-
-
-\### 4.2 Señales artificiales
+- consumo diverso  
 
 
 
-\- tiempos constantes  
-
-\- scroll perfectamente lineal  
-
-\- patrones repetitivos  
-
-\- sesiones extremadamente largas o cortas  
-
-\- acciones sincronizadas entre cuentas  
+### 4.2 Señales artificiales
 
 
 
-\---
+- tiempos constantes  
+
+- scroll perfectamente lineal  
+
+- patrones repetitivos  
+
+- sesiones extremadamente largas o cortas  
+
+- acciones sincronizadas entre cuentas  
 
 
 
-\## 5. Fraud Score
+---
+
+
+
+## 5. Fraud Score
 
 
 
@@ -152,7 +152,7 @@ fraudScore ∈ \[0, 1]
 
 1 → comportamiento claramente fraudulento
 
-6\. Detection Signals
+6. Detection Signals
 
 6.1 Time Consistency
 
@@ -188,7 +188,7 @@ múltiples cuentas en un mismo dispositivo
 
 uso de emuladores
 
-7\. Multi-Account Detection
+7. Multi-Account Detection
 
 Indicadores:
 
@@ -208,7 +208,7 @@ limitación por dispositivo
 
 reputación compartida parcial
 
-8\. Reward Mitigation
+8. Reward Mitigation
 
 
 
@@ -230,7 +230,7 @@ elif fraudScore > 0.5:
 
 &#x20;   reward \*= 0.5
 
-9\. Shadow Penalties
+9. Shadow Penalties
 
 
 
@@ -244,7 +244,7 @@ rewards reducidos sin aviso
 
 variabilidad en la respuesta
 
-10\. Rate Limiting
+10. Rate Limiting
 
 Límites sugeridos:
 
@@ -262,7 +262,7 @@ Ejemplo:
 
 maxArticlesPerHour = 30
 
-11\. Comment Abuse Prevention
+11. Comment Abuse Prevention
 
 Reglas básicas:
 
@@ -280,7 +280,7 @@ baja diversidad léxica
 
 alta frecuencia
 
-12\. Reputation Coupling
+12. Reputation Coupling
 
 
 
@@ -296,7 +296,7 @@ limitación de acciones
 
 pérdida de visibilidad
 
-13\. Cooldowns
+13. Cooldowns
 
 
 
@@ -308,7 +308,7 @@ reducción temporal de rewards
 
 limitación de interacción
 
-14\. Randomization
+14. Randomization
 
 
 
@@ -328,7 +328,7 @@ Esto dificulta la ingeniería inversa del sistema.
 
 
 
-15\. Logging and Auditing
+15. Logging and Auditing
 
 
 
@@ -346,7 +346,7 @@ rewards asignados
 
 flags de fraude
 
-16\. Manual Review (Future)
+16. Manual Review (Future)
 
 
 
@@ -360,7 +360,7 @@ auditoría de cuentas
 
 rollback de rewards
 
-17\. MVP Strategy
+17. MVP Strategy
 
 
 
@@ -384,7 +384,7 @@ clustering complejo
 
 detección avanzada multi-dispositivo
 
-18\. Trade-offs
+18. Trade-offs
 
 Seguridad vs UX
 
@@ -402,7 +402,7 @@ Sistemas complejos son difíciles de mantener.
 
 
 
-19\. Risks
+19. Risks
 
 19.1 False positives
 
@@ -428,7 +428,7 @@ Sistema demasiado complejo para MVP.
 
 
 
-20\. Guiding Principle
+20. Guiding Principle
 
 
 
@@ -442,7 +442,7 @@ pero iterativo
 
 y mejorar con el tiempo
 
-21\. Scope Disclaimer
+21. Scope Disclaimer
 
 
 

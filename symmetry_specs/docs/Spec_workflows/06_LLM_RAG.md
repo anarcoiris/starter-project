@@ -1,8 +1,8 @@
-\# 06\_LLM\_RAG\_SYSTEM.md
+# 06_LLM_RAG_SYSTEM.md
 
 
 
-\## 1. Purpose
+## 1. Purpose
 
 
 
@@ -10,15 +10,15 @@ Este documento define el uso de un sistema basado en LLM (Large Language Model) 
 
 
 
-Este módulo es una \*\*extensión avanzada (overdelivery)\*\* y no es requisito del assignment base.
+Este módulo es una **extensión avanzada (overdelivery)** y no es requisito del assignment base.
 
 
 
-\---
+---
 
 
 
-\## 2. Objective
+## 2. Objective
 
 
 
@@ -26,51 +26,51 @@ El sistema LLM no sustituye las noticias, sino que:
 
 
 
-\- ayuda a entenderlas mejor,
+- ayuda a entenderlas mejor,
 
-\- proporciona contexto adicional,
+- proporciona contexto adicional,
 
-\- permite comparar múltiples fuentes,
+- permite comparar múltiples fuentes,
 
-\- y reduce la fricción cognitiva del usuario.
-
-
-
-\---
+- y reduce la fricción cognitiva del usuario.
 
 
 
-\## 3. Core Principles
+---
 
 
 
-\### 3.1 Source-grounded responses
-
-El modelo debe responder \*\*basado en contenido real\*\*, no inventado.
+## 3. Core Principles
 
 
 
-\### 3.2 Transparency
+### 3.1 Source-grounded responses
+
+El modelo debe responder **basado en contenido real**, no inventado.
+
+
+
+### 3.2 Transparency
 
 Las respuestas deben indicar:
 
-\- de dónde proviene la información,
+- de dónde proviene la información,
 
-\- qué artículos se han usado.
+- qué artículos se han usado.
 
 
 
-\### 3.3 Non-authoritative stance
+### 3.3 Non-authoritative stance
 
 El sistema no debe presentarse como una fuente absoluta de verdad.
 
 
 
-\---
+---
 
 
 
-\## 4. System Overview
+## 4. System Overview
 
 
 
@@ -78,23 +78,23 @@ El sistema se compone de:
 
 
 
-1\. Base de datos de artículos  
+1. Base de datos de artículos  
 
-2\. Sistema de embeddings  
+2. Sistema de embeddings  
 
-3\. Motor de recuperación (retrieval)  
+3. Motor de recuperación (retrieval)  
 
-4\. LLM  
+4. LLM  
 
-5\. Interfaz de usuario  
-
-
-
-\---
+5. Interfaz de usuario  
 
 
 
-\## 5. RAG Pipeline
+---
+
+
+
+## 5. RAG Pipeline
 
 
 
@@ -126,7 +126,7 @@ Context assembly
 
 LLM response
 
-6\. Data Preparation
+6. Data Preparation
 
 6.1 Chunking
 
@@ -152,7 +152,7 @@ usado para búsqueda semántica
 
 almacenado en una vector DB
 
-7\. Retrieval Strategy
+7. Retrieval Strategy
 
 7.1 Top-K Search
 
@@ -174,7 +174,7 @@ por fuente
 
 por categoría
 
-8\. Context Assembly
+8. Context Assembly
 
 
 
@@ -188,7 +188,7 @@ con referencia a su fuente
 
 evitando redundancia
 
-9\. LLM Prompting
+9. LLM Prompting
 
 
 
@@ -214,7 +214,7 @@ If the answer is not in the context, say so.
 
 Cite sources when possible.
 
-10\. Output Format
+10. Output Format
 
 
 
@@ -240,7 +240,7 @@ puntos clave
 
 fuentes utilizadas
 
-11\. Use Cases
+11. Use Cases
 
 11.1 Summarization
 
@@ -274,7 +274,7 @@ Explicar la evolución de un evento.
 
 
 
-12\. Bias Awareness (Optional)
+12. Bias Awareness (Optional)
 
 
 
@@ -294,7 +294,7 @@ posibles omisiones
 
 
 
-13\. Limitations
+13. Limitations
 
 13.1 Hallucinations
 
@@ -320,7 +320,7 @@ La calidad depende del contenido disponible.
 
 
 
-14\. Mitigation Strategies
+14. Mitigation Strategies
 
 restringir respuestas al contexto
 
@@ -336,7 +336,7 @@ Ejemplo:
 
 "I don't have enough information from the available articles."
 
-15\. Backend Architecture
+15. Backend Architecture
 
 
 
@@ -352,7 +352,7 @@ retrieval service
 
 LLM API
 
-16\. Storage Options
+16. Storage Options
 
 Vector DB (opciones):
 
@@ -360,7 +360,7 @@ local (FAISS-like)
 
 managed (Pinecone, etc.)
 
-17\. MVP Strategy
+17. MVP Strategy
 
 
 
@@ -382,7 +382,7 @@ top-K retrieval
 
 prompt simple
 
-18\. UI Integration
+18. UI Integration
 
 
 
@@ -396,7 +396,7 @@ botón "Ask about this article"
 
 modo comparación
 
-19\. Risks
+19. Risks
 
 19.1 Over-reliance
 
@@ -422,7 +422,7 @@ Coste y latencia de LLM.
 
 
 
-20\. Alignment with Assignment
+20. Alignment with Assignment
 
 
 
@@ -440,7 +440,7 @@ pensamiento de sistemas
 
 integración de IA
 
-21\. Scope Disclaimer
+21. Scope Disclaimer
 
 
 

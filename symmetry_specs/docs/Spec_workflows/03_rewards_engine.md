@@ -1,8 +1,8 @@
-\# 03\_REWARD\_ENGINE.md
+# 03_REWARD_ENGINE.md
 
 
 
-\## 1. Purpose
+## 1. Purpose
 
 
 
@@ -14,43 +14,43 @@ El objetivo es:
 
 
 
-\- premiar actividad real y útil,
+- premiar actividad real y útil,
 
-\- evitar abusos,
+- evitar abusos,
 
-\- y alinear incentivos con la calidad del ecosistema.
+- y alinear incentivos con la calidad del ecosistema.
 
+## 1.1 Modo degradado (Fase 1 / stub)
 
+La implementación inicial puede limitarse a **eventos de lectura persistidos** (`read_events`) y un **score placeholder**, sin pool semanal, sin emisión on-chain y sin motor completo de distribución descrito más abajo. Consulta la Fase 1 en [PHASE1_BACKLOG.md](../PHASE1_BACKLOG.md) y [ADR 001](../ADR_001_prototype_rest_mongo_vs_firestore.md).
 
-\---
+---
 
-
-
-\## 2. Core Principle
-
-
-
-El sistema \*\*NO recompensa directamente acciones simples\*\* como:
+## 2. Core Principle
 
 
 
-\- abrir un artículo,
-
-\- hacer scroll,
-
-\- permanecer tiempo en pantalla.
+El sistema **NO recompensa directamente acciones simples** como:
 
 
 
-En su lugar, utiliza un \*\*modelo basado en eventos + scoring\*\*.
+- abrir un artículo,
+
+- hacer scroll,
+
+- permanecer tiempo en pantalla.
 
 
 
-\---
+En su lugar, utiliza un **modelo basado en eventos + scoring**.
 
 
 
-\## 3. Architecture Overview
+---
+
+
+
+## 3. Architecture Overview
 
 
 
@@ -58,61 +58,61 @@ El sistema de rewards se basa en tres capas:
 
 
 
-\### 3.1 Event Layer
+### 3.1 Event Layer
 
 Registra eventos crudos del usuario:
 
 
 
-\- apertura de artículo
+- apertura de artículo
 
-\- scroll
+- scroll
 
-\- tiempo activo
+- tiempo activo
 
-\- interacción
+- interacción
 
-\- comentarios
+- comentarios
 
-\- feedback
-
-
-
-\---
+- feedback
 
 
 
-\### 3.2 Scoring Layer
+---
+
+
+
+### 3.2 Scoring Layer
 
 Transforma eventos en métricas de calidad:
 
 
 
-\- read score
+- read score
 
-\- engagement score
+- engagement score
 
-\- trust score
+- trust score
 
-\- fraud score
-
-
-
-\---
+- fraud score
 
 
 
-\### 3.3 Distribution Layer
+---
+
+
+
+### 3.3 Distribution Layer
 
 Convierte los scores en tokens en el reparto semanal.
 
 
 
-\---
+---
 
 
 
-\## 4. Event Model
+## 4. Event Model
 
 
 
@@ -120,7 +120,7 @@ Los eventos deben ser atómicos y trazables.
 
 
 
-\### Ejemplo:
+### Ejemplo:
 
 
 
@@ -148,7 +148,7 @@ Los eventos deben ser atómicos y trazables.
 
 }
 
-5\. Read Validation
+5. Read Validation
 
 
 
@@ -182,7 +182,7 @@ readScore =
 
 &#x20; w3 \* interactionScore
 
-6\. Quality Multipliers
+6. Quality Multipliers
 
 
 
@@ -210,7 +210,7 @@ reputación del usuario
 
 historial de comportamiento
 
-7\. Fraud Detection Layer
+7. Fraud Detection Layer
 
 
 
@@ -242,7 +242,7 @@ o penalización progresiva.
 
 
 
-8\. Final Reward Formula
+8. Final Reward Formula
 
 
 
@@ -264,7 +264,7 @@ reward =
 
 &#x20; \* (1 - fraudPenalty)
 
-9\. Weekly Distribution
+9. Weekly Distribution
 
 
 
@@ -282,7 +282,7 @@ se calcula contribución relativa
 
 se reparte el pool semanal proporcionalmente
 
-10\. Contribution Model
+10. Contribution Model
 
 
 
@@ -300,7 +300,7 @@ Distribución:
 
 userReward = (userWeight / totalWeight) \* weeklyPool
 
-11\. Caps and Limits
+11. Caps and Limits
 
 
 
@@ -336,7 +336,7 @@ Evita farmear un solo artículo.
 
 
 
-12\. Comment and Feedback Rewards
+12. Comment and Feedback Rewards
 
 
 
@@ -358,7 +358,7 @@ votos de calidad
 
 score de utilidad
 
-13\. Reputation System
+13. Reputation System
 
 
 
@@ -380,7 +380,7 @@ multiplicador de rewards
 
 acceso a features
 
-14\. Storage Strategy
+14. Storage Strategy
 
 
 
@@ -402,7 +402,7 @@ RewardDistributions
 
 UserReputation
 
-15\. Anti-gaming Strategy
+15. Anti-gaming Strategy
 
 
 
@@ -418,7 +418,7 @@ introducir incertidumbre controlada
 
 penalizar patrones mecánicos
 
-16\. Backend Execution
+16. Backend Execution
 
 
 
@@ -438,7 +438,7 @@ repartir tokens
 
 registrar transacciones
 
-17\. Transparency
+17. Transparency
 
 
 
@@ -450,7 +450,7 @@ parcialmente transparente (reglas generales)
 
 pero no totalmente predecible (para evitar exploits)
 
-18\. Risks
+18. Risks
 
 18.1 Overfitting del sistema
 
@@ -476,7 +476,7 @@ Demasiada complejidad dificulta mantenimiento.
 
 
 
-19\. MVP Scope
+19. MVP Scope
 
 
 
@@ -498,7 +498,7 @@ Ejemplo:
 
 tiempo mínimo + scroll mínimo = lectura válida
 
-20\. Scope Disclaimer
+20. Scope Disclaimer
 
 
 

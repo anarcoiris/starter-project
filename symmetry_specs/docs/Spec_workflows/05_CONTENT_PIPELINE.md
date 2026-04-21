@@ -1,8 +1,8 @@
-\# 05\_CONTENT\_PIPELINE.md
+# 05_CONTENT_PIPELINE.md
 
 
 
-\## 1. Purpose
+## 1. Purpose
 
 
 
@@ -10,23 +10,26 @@ Este documento define cómo se ingesta, procesa, almacena y sirve el contenido d
 
 
 
-Este módulo es \*\*core para el assignment\*\*, ya que:
+Este módulo es **core para el assignment**, ya que:
 
+- define el schema de artículos,
+- conecta el contenido con el **almacén de documentos** usado en cada fase (ver 1.1),
+- y soporta la funcionalidad principal del frontend.
 
+## 1.1 Stack dual (prototipo REST + port a Firestore)
 
-\- define el schema de artículos,
+El assignment público del repositorio describe **Firebase Firestore**. En este fork, la decisión arquitectónica es:
 
-\- conecta con Firebase Firestore,
+1. **Fase prototipo:** persistencia en **MongoDB** detrás de una **API REST** (FastAPI + Motor + JWT). El contenido sigue el modelo semántico de [12_data_model.md](12_data_model.md).
+2. **Fase port:** el mismo dominio se mapea a **Firestore** (y Firebase Storage para medios), con reglas y adaptadores en el Data Layer del cliente.
 
-\- y soporta la funcionalidad principal del frontend.
+Referencia: [ADR 001 — Prototipo REST + MongoDB vs Firestore](../ADR_001_prototype_rest_mongo_vs_firestore.md).
 
+En los diagramas de flujo de este documento, **“almacenamiento”** debe leerse como **MongoDB en prototipo** o **Firestore en port**, salvo que el párrafo indique explícitamente uno de los dos.
 
+---
 
-\---
-
-
-
-\## 2. Pipeline Overview
+## 2. Pipeline Overview
 
 
 
@@ -34,59 +37,57 @@ El flujo de contenido sigue estas etapas:
 
 
 
-1\. Ingesta  
+1. Ingesta  
 
-2\. Normalización  
+2. Normalización  
 
-3\. Enriquecimiento  
+3. Enriquecimiento  
 
-4\. Almacenamiento (Firestore)  
+4. Almacenamiento (MongoDB en prototipo; Firestore tras el port)
 
-5\. Renderizado (Frontend)  
-
-
-
-\---
+5. Renderizado (Frontend)  
 
 
 
-\## 3. Content Sources
+---
 
 
 
-\### 3.1 External APIs
-
-\- APIs de noticias (ej: NewsAPI-like)
-
-\- RSS feeds
+## 3. Content Sources
 
 
 
-\### 3.2 Manual Input
+### 3.1 External APIs
 
-\- usuarios periodistas (feature principal del assignment)
+- APIs de noticias (ej: NewsAPI-like)
 
-\- creación de artículos desde la app
-
-
-
-\---
+- RSS feeds
 
 
 
-\## 4. Article Schema (Firestore)
+### 3.2 Manual Input
+
+- usuarios periodistas (feature principal del assignment)
+
+- creación de artículos desde la app
+
+
+
+---
+
+
+
+## 4. Article Schema
 
 
 
 Este schema está diseñado para:
 
+- ser simple en MVP
+- extensible a futuro
+- compatible con **Firestore en el port** y con los documentos descritos para **MongoDB** en [12_data_model.md](12_data_model.md) durante el prototipo
 
-
-\- ser simple en MVP  
-
-\- extensible a futuro  
-
-\- compatible con Firebase  
+**Notación legada (assignment Firebase):** el JSON siguiente usa nombres de campo estilo Firestore (`camelCase`, `timestamp`). En MongoDB los campos equivalentes suelen ser `snake_case` e `ISODate`; la API REST es la capa estable para el cliente móvil.
 
 
 
@@ -126,7 +127,7 @@ Este schema está diseñado para:
 
 }
 
-5\. Firestore Structure
+5. Firestore Structure
 
 Collection: articles
 
@@ -144,7 +145,7 @@ articles/{articleId}/comments
 
 articles/{articleId}/metrics
 
-6\. Cloud Storage
+6. Cloud Storage
 
 
 
@@ -162,7 +163,7 @@ Estructura sugerida:
 
 media/articles/{articleId}/thumbnail.jpg
 
-7\. Normalization
+7. Normalization
 
 
 
@@ -178,7 +179,7 @@ asegurar encoding correcto
 
 truncar descripciones
 
-8\. Enrichment
+8. Enrichment
 
 
 
@@ -202,7 +203,7 @@ normalizar categorías externas
 
 evitar duplicados ("Tech", "Technology", etc.)
 
-9\. AutoTEX Integration (Optional Advanced Feature)
+9. AutoTEX Integration (Optional Advanced Feature)
 
 Objetivo
 
@@ -228,7 +229,7 @@ no es necesario para el MVP
 
 puede implementarse como feature extra
 
-10\. Write Flow (User as Journalist)
+10. Write Flow (User as Journalist)
 
 
 
@@ -254,7 +255,7 @@ datos → Firestore
 
 artículo disponible en feed
 
-11\. Validation Rules
+11. Validation Rules
 
 
 
@@ -270,7 +271,7 @@ imagen válida
 
 timestamps consistentes
 
-12\. Firestore Security Rules (Conceptual)
+12. Firestore Security Rules (Conceptual)
 
 
 
@@ -284,7 +285,7 @@ allow update: if request.auth.uid == resource.data.authorId
 
 allow read: if true
 
-13\. Read Flow
+13. Read Flow
 
 usuario abre artículo
 
@@ -294,7 +295,7 @@ renderiza contenido
 
 registra eventos de lectura (para analytics/rewards)
 
-14\. Performance Considerations
+14. Performance Considerations
 
 14.1 Pagination
 
@@ -314,7 +315,7 @@ publishedAt
 
 category
 
-15\. Caching Strategy
+15. Caching Strategy
 
 
 
@@ -326,7 +327,7 @@ cache local de artículos
 
 evitar llamadas repetidas
 
-16\. Future Extensions
+16. Future Extensions
 
 versionado de artículos
 
@@ -338,7 +339,7 @@ etiquetas avanzadas
 
 contenido multimedia
 
-17\. Risks
+17. Risks
 
 17.1 Data inconsistency
 
@@ -364,7 +365,7 @@ Errores en subida o URLs rotas.
 
 
 
-18\. MVP Scope
+18. MVP Scope
 
 Implementar:
 
@@ -384,7 +385,7 @@ metrics
 
 AutoTEX
 
-19\. Alignment with Assignment
+19. Alignment with Assignment
 
 
 
@@ -400,7 +401,7 @@ integración con Cloud Storage
 
 funcionalidad principal solicitada
 
-20\. Scope Disclaimer
+20. Scope Disclaimer
 
 
 
