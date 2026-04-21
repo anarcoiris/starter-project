@@ -90,7 +90,7 @@ ArticleSchema = {
 ```
 *Hint: study the data we have in the articles from the API used in the app to design your own schema.*
 
-**Note: Please write this schema in backend/docs/DB_SCHEMA.md**
+**Note: Please write this schema in [docs/backend/DB_SCHEMA.md](./docs/backend/DB_SCHEMA.md)**
 
 ### 1.2 THE IMPLEMENTATION OF THE SCHEMA
 After writing the schema, you must implement it using Firebase's Firestore technology by creating the appropriate collections, subcollections, fields, documents, etc.
@@ -117,7 +117,7 @@ In order to do this, read the [following documentation](./frontend/README.md)
 After setting up, we do not recommend you get into developing the actual UI of the frontend until you have done the business layer.
 
 This is the most important layer, and we recommend you create it with extreme care and attention to detail.
-To understand the business layer well, take a look at [our architecture](./docs/APP_ARCHITECTURE.md) and a [tutorial explaining the domain layer](https://www.youtube.com/watch?v=AlOVRC6eJqE)
+To understand the business layer well, take a look at [our architecture](./docs/architecture/APP_ARCHITECTURE.md) and a [tutorial explaining the domain layer](https://www.youtube.com/watch?v=AlOVRC6eJqE)
 
 Now, implement the domain layer, but instead of using the data layer to get real data for the application, **use mock data inside the usecases** to be used by the presentation layer.
 
@@ -137,7 +137,7 @@ Notes:
 
 ## 2.3 THE DATA LAYER
 Now that you have implemented the UI, the business logic, and the backend required for our functionality to work, it remains to write the code to ensure that the Flutter frontend and the Firebase backend will be synchronized so that any data you upload will not be lost when you close the application.
-For this, we must create the data layer of our app according to [our frontend architecture](./docs/APP_ARCHITECTURE.md)'s restrictions so that the use_cases in our application use the actual data providers and not mock data.
+For this, we must create the data layer of our app according to [our frontend architecture](./docs/architecture/APP_ARCHITECTURE.md)'s restrictions so that the use_cases in our application use the actual data providers and not mock data.
 **Note that you must first add your firebase project settings to our frontend. Instructions are described [here](./backend/README.md)**
 
 
@@ -146,7 +146,7 @@ Now, you have finished your application... TON TON TON!!!!
 
 However... before completely finishing your application you must create a Report explaining your experience.
 This report is crucial for reviewers to understand your work so please do not ignore it.
-[Here](./docs/REPORT_INSTRUCTIONS.md) are instructions on what should be added to the report: [Report Instructions](./docs/REPORT_INSTRUCTIONS.md)
+[Here](./docs/project/REPORT_INSTRUCTIONS.md) are instructions on what should be added to the report: [Report Instructions](./docs/project/REPORT_INSTRUCTIONS.md)
 **The report should be written in `/docs/REPORT.md`** 
 
 ## Extra: Is there more?
@@ -168,7 +168,7 @@ This index contains all the links to the project's documentation.
 [Understanding the Backend and getting started](./backend/README.md)
 
 **Contributions and Violations**
-1. [Contribution Guidelines](./docs/CONTRIBUTION_GUIDELINES.md)
-2. [Architecture Violations](./docs/ARCHITECTURE_VIOLATIONS.md)
-3. [Code Quality Violations](./docs/CODING_GUIDELINES.md)
-4. [Our App Architecture](./docs/APP_ARCHITECTURE.md)
+1. [Contribution Guidelines](./docs/project/CONTRIBUTION_GUIDELINES.md)
+2. [Architecture Violations](./docs/architecture/ARCHITECTURE_VIOLATIONS.md)
+3. [Code Quality Violations](./docs/architecture/CODING_GUIDELINES.md)
+4. [Our App Architecture](./docs/architecture/APP_ARCHITECTURE.md)
