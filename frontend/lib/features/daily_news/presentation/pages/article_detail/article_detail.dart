@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -20,9 +21,15 @@ class ArticleDetailsView extends HookWidget {
 
   @override
   Widget build(BuildContext context) {
+    final startTime = useRef(DateTime.now());
+    
     useEffect(() {
-      _claimReward(context);
-      return null;
+      // Basic validation: user must stay 10 seconds to get the reward
+      final timer = Timer(const Duration(seconds: 10), () {
+        final duration = DateTime.now().difference(startTime.value).inSeconds.toDouble();
+        _claimReward(context, duration);
+      });
+      return () => timer.cancel();
     }, []);
 
     return BlocListener<RewardCubit, RewardState>(
@@ -58,8 +65,8 @@ class ArticleDetailsView extends HookWidget {
     );
   }
 
-  void _claimReward(BuildContext context) {
-    context.read<RewardCubit>().claimReward(kAlphaTesterId, article?.url ?? '');
+  void _claimReward(BuildContext context, double duration) {
+    context.read<RewardCubit>().claimReward(kAlphaTesterId, article?.url ?? '', duration);
   }
 
   PreferredSizeWidget _buildAppBar(BuildContext context) {
@@ -83,6 +90,7 @@ class ArticleDetailsView extends HookWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          _buildRewardStatus(),
           _buildArticleTitleAndDate(),
           _buildArticleImage(),
           _buildArticleContent(context),
@@ -212,6 +220,37 @@ class ArticleDetailsView extends HookWidget {
         icon: const Icon(Ionicons.bookmark, color: Colors.black),
         label: const Text('Guardar', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
       ),
+    );
+  }
+
+  Widget _buildRewardStatus() {
+    return BlocBuilder<RewardCubit, RewardState>(
+      builder: (context, state) {
+        if (state is RewardClaimSuccess) {
+          return Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 22),
+            color: AppColors.success.withOpacity(0.1),
+            child: Row(
+              children: [
+                const Icon(Ionicons.checkmark_circle, color: AppColors.success, size: 16),
+                const SizedBox(width: 8),
+                const Text('Recompensa obtenida por esta lectura', style: TextStyle(color: AppColors.success, fontSize: 12, fontWeight: FontWeight.bold)),
+              ],
+            ),
+          );
+        }
+        
+        if (state is RewardClaiming) {
+          return const LinearProgressIndicator(
+            backgroundColor: Colors.transparent,
+            valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+            minHeight: 2,
+          );
+        }
+
+        return const SizedBox.shrink();
+      },
     );
   }
 

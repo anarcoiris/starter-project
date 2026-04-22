@@ -18,7 +18,8 @@ async def claim_reward(request: ClaimRequest, service: RewardService = Depends(g
     Claim tokens for reading an article. 
     This is an off-chain record that will be snapshotted for the testnet distribution.
     """
-    return await service.claim_reading_reward(request.userId, request.articleId)
+    return await service.claim_reading_reward(request.userId, request.articleId, request.readTime)
+
 
 @router.get("/balance/{user_id}")
 async def get_balance(user_id: str, service: RewardService = Depends(get_reward_service)):

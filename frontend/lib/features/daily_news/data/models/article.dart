@@ -38,6 +38,8 @@ class ArticleModel extends ArticleEntity {
     );
   }
 
+  factory ArticleModel.fromRawData(Map<String, dynamic> map) => ArticleModel.fromJson(map);
+
   ArticleEntity toEntity() => ArticleEntity(
         id: id,
         author: author,
@@ -78,6 +80,8 @@ class ArticleModel extends ArticleEntity {
       'tokensEarned': 0.0,
     };
   }
+
+  Map<String, dynamic> toRawData() => toJson();
 
   String get articleId {
     if (url != null && url!.isNotEmpty) {

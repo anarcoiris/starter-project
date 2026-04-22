@@ -6,15 +6,17 @@ class RewardApiService {
 
   RewardApiService(this._dio);
 
-  Future<Map<String, dynamic>> claimReward(String userId, String articleId) async {
+  Future<Map<String, dynamic>> claimReward(String userId, String articleId, double readTime) async {
     try {
       final response = await _dio.post(
         'rewards/claim',
         data: {
           'userId': userId,
           'articleId': articleId,
+          'readTime': readTime,
         },
       );
+
       return response.data;
     } catch (e) {
       rethrow;
