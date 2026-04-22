@@ -3,7 +3,8 @@ import 'package:news_app_clean_architecture/features/daily_news/domain/entities/
 
 abstract class ArticleRepository {
   // API methods
-  Future<DataState<List<ArticleEntity>>> getNewsArticles();
+  Future<DataState<List<ArticleEntity>>> getNewsArticles({String? category});
+
 
   // Database methods
   Future<List<ArticleEntity>> getSavedArticles();

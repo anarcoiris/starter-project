@@ -4,6 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:news_app_clean_architecture/features/auth/presentation/bloc/auth_cubit.dart';
 import 'package:news_app_clean_architecture/core/constants/app_colors.dart';
+import 'package:news_app_clean_architecture/core/constants/constants.dart';
+import 'package:news_app_clean_architecture/features/daily_news/data/data_sources/remote/reward_api_service.dart';
+import 'package:news_app_clean_architecture/injection_container.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -15,6 +18,26 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage> {
   final TextEditingController _bioController = TextEditingController();
   bool _isEditing = false;
+  double _balance = 0.0;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchBalance();
+  }
+
+  void _fetchBalance() async {
+    try {
+      final result = await sl<RewardApiService>().getBalance(kAlphaTesterId);
+      if (mounted) {
+        setState(() {
+          _balance = (result['balance'] as num).toDouble();
+        });
+      }
+    } catch (e) {
+      debugPrint('Error fetching balance: $e');
+    }
+  }
 
   void _showLogoutDialog(BuildContext context) {
     showDialog(
@@ -189,7 +212,9 @@ class _ProfilePageState extends State<ProfilePage> {
             Row(
               children: [
                 _buildStatCard('REPUTACIÓN', '${user.reputationScore}', Icons.shield_outlined),
-                const SizedBox(width: 16),
+                const SizedBox(width: 12),
+                _buildStatCard('BOLSA SYM', '${_balance.toInt()}', Icons.account_balance_wallet_outlined, isHighlight: true),
+                const SizedBox(width: 12),
                 _buildStatCard('ARTÍCULOS', '0', Icons.article_outlined),
               ],
             ),
@@ -199,21 +224,21 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _buildStatCard(String label, String value, IconData icon) {
+  Widget _buildStatCard(String label, String value, IconData icon, {bool isHighlight = false}) {
     return Expanded(
       child: Container(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 10),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.03),
+          color: isHighlight ? AppColors.primary.withOpacity(0.05) : Colors.white.withOpacity(0.03),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.white.withOpacity(0.05)),
+          border: Border.all(color: isHighlight ? AppColors.primary.withOpacity(0.2) : Colors.white.withOpacity(0.05)),
         ),
         child: Column(
           children: [
-            Icon(icon, color: Colors.cyanAccent, size: 24),
+            Icon(icon, color: isHighlight ? AppColors.primary : Colors.cyanAccent, size: 24),
             const SizedBox(height: 12),
-            Text(value, style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
-            Text(label, style: const TextStyle(color: Colors.white54, fontSize: 9, letterSpacing: 1)),
+            Text(value, style: TextStyle(color: isHighlight ? AppColors.primary : Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+            Text(label, style: const TextStyle(color: Colors.white54, fontSize: 8, letterSpacing: 1), textAlign: TextAlign.center),
           ],
         ),
       ),

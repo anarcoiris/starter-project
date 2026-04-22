@@ -16,9 +16,11 @@ class NewsApiService {
       final response = await _dio.get(
         'articles/',
         queryParameters: {
+          'category': category,
           'limit': 20,
         },
       );
+
 
       final List<dynamic> data = response.data is List
           ? response.data

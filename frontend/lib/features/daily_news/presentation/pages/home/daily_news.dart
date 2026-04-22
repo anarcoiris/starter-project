@@ -220,11 +220,13 @@ class _DailyNewsState extends State<DailyNews> {
       ),
       child: BottomNavigationBar(
         onTap: (index) {
+          if (index == 0) context.read<RemoteArticlesBloc>().add(const GetArticles());
           if (index == 1) _onTopicsPressed(context);
           if (index == 2) _onPublishPressed(context);
           if (index == 3) _onShowSavedArticlesViewTapped(context);
           if (index == 4) _onProfilePressed(context);
         },
+
         currentIndex: 0,
         backgroundColor: AppColors.background,
         selectedItemColor: AppColors.primary,

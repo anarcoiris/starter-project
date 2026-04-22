@@ -24,14 +24,15 @@ class ArticleRepositoryImpl implements ArticleRepository {
   );
   
   @override
-  Future<DataState<List<ArticleEntity>>> getNewsArticles() async {
+  Future<DataState<List<ArticleEntity>>> getNewsArticles({String? category}) async {
    try {
-     developer.log('Solicitando artículos al backend local/remoto...', name: 'SymmetryArticles');
+     developer.log('Solicitando artículos al backend local/remoto... Categoría: $category', name: 'SymmetryArticles');
      final httpResponse = await _newsApiService.getNewsArticles(
        apiKey: newsAPIKey,
        country: countryQuery,
-       category: categoryQuery,
+       category: category ?? categoryQuery,
      );
+
 
      if (httpResponse.response.statusCode == HttpStatus.ok) {
        developer.log('Artículos recibidos con éxito (${httpResponse.data.length})', name: 'SymmetryArticles');
@@ -62,26 +63,33 @@ class ArticleRepositoryImpl implements ArticleRepository {
   Future<DataState<void>> postArticle(ArticleEntity article) async {
     final model = ArticleModel.fromEntity(article);
     try {
+      developer.log('Intentando publicar artículo en API local/remoto...', name: 'SymmetryArticles');
       final httpResponse = await _newsApiService.postArticle(article: model);
       
       if (httpResponse.response.statusCode == HttpStatus.ok || httpResponse.response.statusCode == HttpStatus.created) {
+        developer.log('Artículo publicado con éxito en API.', name: 'SymmetryArticles');
         return DataSuccess(null);
       } else {
+        developer.log('API respondió con error: ${httpResponse.response.statusCode}. Intentando fallback...', name: 'SymmetryArticles');
         throw Exception("Local API failed with status ${httpResponse.response.statusCode}");
       }
     } catch (e) {
+      developer.log('Error al publicar en API: $e. Intentando Firebase...', name: 'SymmetryArticles');
       // Fallback to Firebase
       try {
         await _firebaseDataSource.postArticle(model);
+        developer.log('Artículo publicado con éxito en Firebase (Fallback).', name: 'SymmetryArticles');
         return DataSuccess(null);
       } catch (firebaseError) {
+        developer.log('FALLO TOTAL: No se pudo publicar en ninguna plataforma: $firebaseError', name: 'SymmetryArticles');
         return DataFailed(DioException(
-          error: "Failed to post to both backends",
+          error: "Error crítico: Fallo en API y Firebase. Revisa conexión y logs de Storage.",
           requestOptions: RequestOptions(path: 'articles')
         ));
       }
     }
   }
+
 
   @override
   Future<List<ArticleEntity>> getSavedArticles() async {

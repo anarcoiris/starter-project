@@ -15,7 +15,7 @@ logger = logging.getLogger("SymmetryAPI")
 
 from app.core.config import settings
 from app.mongo_schema import initialize_mongo_schema
-from app.api.v1.endpoints import articles, ollama, ingest, rewards
+from app.api.v1.endpoints import articles, ollama, ingest, rewards, debug
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -38,6 +38,8 @@ async def lifespan(app: FastAPI):
     logger.info("Shutting down Nexus Systems...")
     app.state.motor_client.close()
 
+from fastapi.middleware.cors import CORSMiddleware
+
 app = FastAPI(
     title="Symmetry Platform API",
     version="1.0.0",
@@ -45,6 +47,16 @@ app = FastAPI(
     docs_url="/api/docs",
     openapi_url="/api/openapi.json"
 )
+
+# Enable CORS for professional interoperability
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 # Debug Middleware: Log every request
 @app.middleware("http")
@@ -65,6 +77,7 @@ api_router.include_router(articles.router, prefix="/articles", tags=["Articles"]
 api_router.include_router(ollama.router, prefix="/ollama", tags=["Ollama"])
 api_router.include_router(ingest.router, prefix="/ingest", tags=["Ingestion"])
 api_router.include_router(rewards.router, prefix="/rewards", tags=["Rewards"])
+api_router.include_router(debug.router, prefix="/debug", tags=["Debug & Diagnostics"])
 
 app.include_router(api_router)
 

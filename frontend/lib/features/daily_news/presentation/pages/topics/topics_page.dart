@@ -1,17 +1,20 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:news_app_clean_architecture/core/constants/app_colors.dart';
+import 'package:news_app_clean_architecture/features/daily_news/presentation/bloc/article/remote/remote_article_bloc.dart';
+import 'package:news_app_clean_architecture/features/daily_news/presentation/bloc/article/remote/remote_article_event.dart';
 
 class TopicsPage extends StatelessWidget {
   const TopicsPage({super.key});
 
   final List<Map<String, dynamic>> topics = const [
-    {'name': 'AI & ROBOTICS', 'icon': Icons.psychology, 'count': 24},
-    {'name': 'CYBER SECURITY', 'icon': Icons.security, 'count': 18},
-    {'name': 'GEOPOLITICS', 'icon': Icons.public, 'count': 42},
-    {'name': 'FINANCIAL MARKETS', 'icon': Icons.trending_up, 'count': 31},
-    {'name': 'SPACE TECH', 'icon': Icons.rocket_launch, 'count': 12},
-    {'name': 'BIOTECH', 'icon': Icons.science, 'count': 9},
+    {'name': 'AI & TECH', 'id': 'technology', 'icon': Icons.psychology},
+    {'name': 'BUSINESS', 'id': 'business', 'icon': Icons.trending_up},
+    {'name': 'SCIENCE', 'id': 'science', 'icon': Icons.science},
+    {'name': 'HEALTH', 'id': 'health', 'icon': Icons.health_and_safety},
+    {'name': 'SPORTS', 'id': 'sports', 'icon': Icons.sports_basketball},
+    {'name': 'GENERAL', 'id': 'general', 'icon': Icons.public},
   ];
 
   @override
@@ -25,7 +28,6 @@ class TopicsPage extends StatelessWidget {
       ),
       body: Stack(
         children: [
-          // Background Glow effect
           Positioned(
             top: -100,
             right: -100,
@@ -80,11 +82,17 @@ class TopicsPage extends StatelessWidget {
             color: Colors.transparent,
             child: InkWell(
               onTap: () {
-                // Implement filter logic or just show a coming soon toast
+                // Trigger the filter event in the global bloc
+                context.read<RemoteArticlesBloc>().add(GetArticles(category: topic['id']));
+                
+                // Navigate back to the home feed
+                Navigator.pop(context);
+                
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text('Filtrando por ${topic['name']}...'),
                     backgroundColor: Colors.cyanAccent.withOpacity(0.1),
+                    duration: const Duration(seconds: 1),
                     behavior: SnackBarBehavior.floating,
                   ),
                 );
@@ -120,9 +128,9 @@ class TopicsPage extends StatelessWidget {
                         color: Colors.white.withOpacity(0.05),
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: Text(
-                        '${topic['count']} ALERTAS',
-                        style: const TextStyle(color: Colors.cyanAccent, fontSize: 8, fontWeight: FontWeight.bold),
+                      child: const Text(
+                        'VER ALERTAS',
+                        style: TextStyle(color: Colors.cyanAccent, fontSize: 8, fontWeight: FontWeight.bold),
                       ),
                     ),
                   ],
@@ -135,3 +143,4 @@ class TopicsPage extends StatelessWidget {
     );
   }
 }
+

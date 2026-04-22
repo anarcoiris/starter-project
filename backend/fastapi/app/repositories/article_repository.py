@@ -9,10 +9,15 @@ class ArticleRepository:
     def __init__(self, db: AsyncIOMotorDatabase):
         self.collection = db["articles"]
 
-    async def get_all(self, limit: int = 10) -> List[Article]:
-        cursor = self.collection.find({}, {"_id": 0}).sort("publishedAt", -1).limit(limit)
+    async def get_all(self, category: str = None, limit: int = 10) -> List[Article]:
+        query = {}
+        if category:
+            query["category"] = category
+            
+        cursor = self.collection.find(query, {"_id": 0}).sort("publishedAt", -1).limit(limit)
         items = await cursor.to_list(length=limit)
         return [Article(**item) for item in items]
+
 
     async def create(self, article: ArticleCreate) -> Article:
         doc = article.model_dump()

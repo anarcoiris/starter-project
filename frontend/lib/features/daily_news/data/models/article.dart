@@ -13,6 +13,7 @@ class ArticleModel extends ArticleEntity {
     String? urlToImage,
     String? publishedAt,
     String? content,
+    double? tokensEarned,
   }) : super(
           id: id,
           author: author,
@@ -22,7 +23,9 @@ class ArticleModel extends ArticleEntity {
           urlToImage: urlToImage,
           publishedAt: publishedAt,
           content: content,
+          tokensEarned: tokensEarned,
         );
+
 
   factory ArticleModel.fromJson(Map<String, dynamic> map) {
     return ArticleModel(
@@ -35,7 +38,9 @@ class ArticleModel extends ArticleEntity {
           : kDefaultImage,
       publishedAt: map['publishedAt'] ?? "",
       content: map['content'] ?? "",
+      tokensEarned: (map['tokensEarned'] as num?)?.toDouble() ?? 0.0,
     );
+
   }
 
   factory ArticleModel.fromRawData(Map<String, dynamic> map) => ArticleModel.fromJson(map);
@@ -49,7 +54,9 @@ class ArticleModel extends ArticleEntity {
         urlToImage: urlToImage,
         publishedAt: publishedAt,
         content: content,
+        tokensEarned: tokensEarned,
       );
+
 
   factory ArticleModel.fromEntity(ArticleEntity entity) {
     return ArticleModel(
@@ -60,8 +67,10 @@ class ArticleModel extends ArticleEntity {
         url: entity.url,
         urlToImage: entity.urlToImage,
         publishedAt: entity.publishedAt,
-        content: entity.content);
+        content: entity.content,
+        tokensEarned: entity.tokensEarned);
   }
+
 
   Map<String, dynamic> toJson() {
     return {
@@ -77,8 +86,9 @@ class ArticleModel extends ArticleEntity {
       'category': 'general',
       'views': 0,
       'readTime': 0,
-      'tokensEarned': 0.0,
+      'tokensEarned': tokensEarned ?? 0.0,
     };
+
   }
 
   Map<String, dynamic> toRawData() => toJson();
