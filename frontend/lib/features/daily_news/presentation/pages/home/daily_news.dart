@@ -11,6 +11,8 @@ import 'package:news_app_clean_architecture/features/daily_news/presentation/wid
 import 'package:news_app_clean_architecture/features/daily_news/presentation/bloc/article/remote/remote_article_bloc.dart';
 import 'package:news_app_clean_architecture/features/daily_news/presentation/bloc/article/remote/remote_article_event.dart';
 import 'package:news_app_clean_architecture/features/daily_news/presentation/bloc/article/remote/remote_article_state.dart';
+import 'package:news_app_clean_architecture/core/analytics/analytics_repository.dart';
+import 'package:news_app_clean_architecture/injection_container.dart';
 
 class DailyNews extends StatefulWidget {
   const DailyNews({Key? key}) : super(key: key);
@@ -197,6 +199,7 @@ class _DailyNewsState extends State<DailyNews> {
   }
 
   void _onArticlePressed(BuildContext context, ArticleEntity article) {
+    sl<AnalyticsRepository>().trackArticleView(article);
     Navigator.pushNamed(context, '/ArticleDetails', arguments: article);
   }
 
