@@ -2,10 +2,10 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:ionicons/ionicons.dart';
-import 'package:news_app_clean_architecture/core/constants/app_colors.dart';
-import 'package:news_app_clean_architecture/features/daily_news/presentation/bloc/chat/chat_bloc.dart';
-import 'package:news_app_clean_architecture/features/daily_news/presentation/bloc/chat/chat_event.dart';
-import 'package:news_app_clean_architecture/features/daily_news/presentation/bloc/chat/chat_state.dart';
+
+// Elegant Imports (Barrels)
+import 'package:news_app_clean_architecture/core/core.dart';
+import 'package:news_app_clean_architecture/features/daily_news/presentation/daily_news_presentation.dart';
 import 'package:news_app_clean_architecture/injection_container.dart';
 
 class OwlAssistantPage extends StatelessWidget {

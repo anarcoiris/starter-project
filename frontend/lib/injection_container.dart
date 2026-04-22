@@ -3,26 +3,19 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:get_it/get_it.dart';
 import 'package:dio/dio.dart';
-import 'package:news_app_clean_architecture/features/auth/data/repository/auth_repository_impl.dart';
-import 'package:news_app_clean_architecture/features/auth/domain/repository/auth_repository.dart';
-import 'package:news_app_clean_architecture/features/auth/presentation/bloc/auth_cubit.dart';
-import 'package:news_app_clean_architecture/core/config/api_config.dart';
+
+// Elegant Imports (Barrels)
+import 'package:news_app_clean_architecture/core/core.dart';
+import 'package:news_app_clean_architecture/features/auth/auth.dart';
+import 'package:news_app_clean_architecture/features/daily_news/domain/daily_news_domain.dart';
+import 'package:news_app_clean_architecture/features/daily_news/presentation/daily_news_presentation.dart';
+
+// Data Sources (Non-exported for now to keep barrels semantic)
 import 'package:news_app_clean_architecture/features/daily_news/data/data_sources/remote/firebase_data_source.dart';
 import 'package:news_app_clean_architecture/features/daily_news/data/data_sources/remote/chat_service.dart';
 import 'package:news_app_clean_architecture/features/daily_news/data/data_sources/remote/news_api_service.dart';
 import 'package:news_app_clean_architecture/features/daily_news/data/repository/article_repository_impl.dart';
-import 'package:news_app_clean_architecture/features/daily_news/domain/repository/article_repository.dart';
-import 'package:news_app_clean_architecture/features/daily_news/domain/usecases/get_article.dart';
-import 'package:news_app_clean_architecture/features/daily_news/domain/usecases/post_article.dart';
-import 'package:news_app_clean_architecture/features/daily_news/domain/usecases/get_saved_article.dart';
-import 'package:news_app_clean_architecture/features/daily_news/domain/usecases/remove_article.dart';
-import 'package:news_app_clean_architecture/features/daily_news/domain/usecases/save_article.dart';
 import 'package:news_app_clean_architecture/features/daily_news/data/data_sources/local/app_database.dart';
-import 'package:news_app_clean_architecture/features/daily_news/presentation/bloc/article/remote/remote_article_bloc.dart';
-import 'package:news_app_clean_architecture/features/daily_news/presentation/bloc/article/local/local_article_bloc.dart';
-import 'package:news_app_clean_architecture/features/daily_news/presentation/bloc/chat/chat_bloc.dart';
-import 'package:news_app_clean_architecture/core/analytics/analytics_repository.dart';
-import 'package:news_app_clean_architecture/core/analytics/firestore_analytics_impl.dart';
 
 final sl = GetIt.instance;
 

@@ -105,28 +105,42 @@ class _RegisterPageState extends State<RegisterPage> {
                               if (state is AuthLoading) {
                                 return const CircularProgressIndicator(color: Colors.cyanAccent);
                               }
-                              return ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.transparent,
-                                  foregroundColor: Colors.cyanAccent,
-                                  minimumSize: const Size(double.infinity, 60),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(15),
-                                    side: const BorderSide(color: Colors.cyanAccent),
+                              return Column(
+                                children: [
+                                  ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.transparent,
+                                      foregroundColor: Colors.cyanAccent,
+                                      minimumSize: const Size(double.infinity, 60),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(15),
+                                        side: const BorderSide(color: Colors.cyanAccent),
+                                      ),
+                                      shadowColor: Colors.cyanAccent.withOpacity(0.3),
+                                    ),
+                                    onPressed: () {
+                                      context.read<AuthCubit>().register(
+                                        _emailController.text,
+                                        _passwordController.text,
+                                        _nameController.text,
+                                      );
+                                    },
+                                    child: const Text(
+                                      'CREAR CREDENCIALES',
+                                      style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 2),
+                                    ),
                                   ),
-                                  shadowColor: Colors.cyanAccent.withOpacity(0.3),
-                                ),
-                                onPressed: () {
-                                  context.read<AuthCubit>().register(
-                                    _emailController.text,
-                                    _passwordController.text,
-                                    _nameController.text,
-                                  );
-                                },
-                                child: const Text(
-                                  'CREAR CREDENCIALES',
-                                  style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 2),
-                                ),
+                                  const SizedBox(height: 16),
+                                  // Google Sign-In alternative
+                                  TextButton.icon(
+                                    onPressed: () => context.read<AuthCubit>().signInWithGoogle(),
+                                    icon: const Icon(Icons.g_mobiledata, color: Colors.white, size: 24),
+                                    label: const Text(
+                                      'REGISTRAR CON GOOGLE',
+                                      style: TextStyle(color: Colors.white, fontSize: 10, letterSpacing: 1),
+                                    ),
+                                  ),
+                                ],
                               );
                             },
                           ),

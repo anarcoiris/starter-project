@@ -1,9 +1,9 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:news_app_clean_architecture/features/auth/presentation/bloc/auth_cubit.dart';
-import 'package:news_app_clean_architecture/features/auth/presentation/pages/welcome_page.dart';
-import 'package:news_app_clean_architecture/features/auth/presentation/pages/register_page.dart';
+
+// Elegant Imports (Barrels)
+import 'package:news_app_clean_architecture/features/auth/auth.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -102,25 +102,45 @@ class _LoginPageState extends State<LoginPage> {
                               if (state is AuthLoading) {
                                 return const CircularProgressIndicator(color: Colors.cyanAccent);
                               }
-                              return ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.cyanAccent,
-                                  foregroundColor: Colors.black,
-                                  minimumSize: const Size(double.infinity, 60),
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-                                  elevation: 10,
-                                  shadowColor: Colors.cyanAccent.withOpacity(0.5),
-                                ),
-                                onPressed: () {
-                                  context.read<AuthCubit>().login(
-                                    _emailController.text,
-                                    _passwordController.text,
-                                  );
-                                },
-                                child: const Text(
-                                  'AUTENTICAR',
-                                  style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 2),
-                                ),
+                              return Column(
+                                children: [
+                                  ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.cyanAccent,
+                                      foregroundColor: Colors.black,
+                                      minimumSize: const Size(double.infinity, 60),
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                                      elevation: 10,
+                                      shadowColor: Colors.cyanAccent.withOpacity(0.5),
+                                    ),
+                                    onPressed: () {
+                                      context.read<AuthCubit>().login(
+                                        _emailController.text,
+                                        _passwordController.text,
+                                      );
+                                    },
+                                    child: const Text(
+                                      'AUTENTICAR',
+                                      style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 2),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  // Google Sign-In Button
+                                  OutlinedButton.icon(
+                                    style: OutlinedButton.styleFrom(
+                                      minimumSize: const Size(double.infinity, 60),
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                                      side: BorderSide(color: Colors.white.withOpacity(0.2)),
+                                      foregroundColor: Colors.white,
+                                    ),
+                                    onPressed: () => context.read<AuthCubit>().signInWithGoogle(),
+                                    icon: const Icon(Icons.g_mobiledata, color: Colors.white, size: 30),
+                                    label: const Text(
+                                      'CONTINUAR CON GOOGLE',
+                                      style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1, fontSize: 12),
+                                    ),
+                                  ),
+                                ],
                               );
                             },
                           ),

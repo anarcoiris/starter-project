@@ -9,15 +9,21 @@ class ChatService {
 
   Future<String> getChatResponse(String prompt) async {
     try {
-      // Intento 1: Servidor Local (Ollama)
-      final response = await _dio.post(
-        '/ollama/api/generate',
+      // Intento 1: Servidor Local (Ollama Container)
+      final localDio = Dio(BaseOptions(
+        baseUrl: ApiConfig.ollamaBaseUrl,
+        connectTimeout: const Duration(seconds: 5),
+        receiveTimeout: const Duration(seconds: 15),
+      ));
+
+      final response = await localDio.post(
+        '/api/generate',
         data: {
           'model': 'qwen:2.5b',
           'prompt': prompt,
           'stream': false,
         },
-      ).timeout(const Duration(seconds: 10));
+      );
 
       if (response.statusCode == 200) {
         return response.data['response'] ?? "No pude procesar la respuesta.";
@@ -25,7 +31,7 @@ class ChatService {
         return await _getOpenAIResponse(prompt);
       }
     } catch (e) {
-      // Fallback a OpenAI si el servidor local falla
+      // Fallback a OpenAI (gpt-4o-mini) si el contenedor Ollama no responde
       return await _getOpenAIResponse(prompt);
     }
   }

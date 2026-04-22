@@ -19,6 +19,7 @@ class SavedArticles extends HookWidget {
     return BlocProvider(
       create: (_) => sl<LocalArticleBloc>()..add(const GetSavedArticles()),
       child: Scaffold(
+        backgroundColor: const Color(0xFF03050F),
         appBar: _buildAppBar(context),
         body: _buildBody(),
       ),
@@ -27,11 +28,16 @@ class SavedArticles extends HookWidget {
 
   PreferredSizeWidget _buildAppBar(BuildContext context) {
     return AppBar(
+      backgroundColor: Colors.transparent,
+      elevation: 0,
       leading: IconButton(
         onPressed: () => Navigator.pop(context),
-        icon: const Icon(Ionicons.chevron_back, color: AppColors.primary),
+        icon: const Icon(Ionicons.chevron_back, color: Colors.cyanAccent),
       ),
-      title: const Text('Artículos Guardados'),
+      title: const Text(
+        'ARTÍCULOS GUARDADOS',
+        style: TextStyle(letterSpacing: 2, fontWeight: FontWeight.bold, color: Colors.white),
+      ),
     );
   }
 
@@ -39,29 +45,46 @@ class SavedArticles extends HookWidget {
     return BlocBuilder<LocalArticleBloc, LocalArticlesState>(
       builder: (context, state) {
         if (state is LocalArticlesLoading) {
-          return const Center(child: CupertinoActivityIndicator(color: AppColors.primary));
+          return const Center(child: CupertinoActivityIndicator(color: Colors.cyanAccent));
         } else if (state is LocalArticlesDone) {
           return _buildArticlesList(state.articles!);
         }
-        return Container();
+        return const SizedBox();
       },
     );
   }
 
   Widget _buildArticlesList(List<ArticleEntity> articles) {
     if (articles.isEmpty) {
-      return const Center(
-          child: Text(
-        'SIN ARTÍCULOS GUARDADOS',
-        style: TextStyle(
-          color: AppColors.textMuted, 
-          fontWeight: FontWeight.bold,
-          letterSpacing: 1.2
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white10, width: 1),
+              ),
+              child: const Icon(Ionicons.bookmark_outline, color: Colors.white10, size: 40),
+            ),
+            const SizedBox(height: 24),
+            const Text(
+              'SIN REGISTROS EN EL ARCHIVO',
+              style: TextStyle(
+                color: Colors.white24, 
+                fontWeight: FontWeight.bold,
+                letterSpacing: 2,
+                fontSize: 10
+              ),
+            ),
+          ],
         ),
-      ));
+      );
     }
 
     return ListView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       itemCount: articles.length,
       itemBuilder: (context, index) {
         return ArticleWidget(

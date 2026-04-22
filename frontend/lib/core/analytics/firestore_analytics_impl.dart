@@ -14,9 +14,9 @@ class FirestoreAnalyticsImpl implements AnalyticsRepository {
   @override
   Future<void> trackArticleView(ArticleEntity article) async {
     await _logInteraction('article_view', {
-      'article_id': article.url, // Using URL as unique ID for now
+      'article_id': article.url, 
       'article_title': article.title,
-      'source': article.source,
+      'article_author': article.author,
       'timestamp': FieldValue.serverTimestamp(),
     });
   }

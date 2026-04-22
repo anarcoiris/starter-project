@@ -1,4 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:news_app_clean_architecture/features/auth/domain/entities/user.dart';
 import 'package:news_app_clean_architecture/features/auth/domain/repository/auth_repository.dart';
 
@@ -35,8 +37,42 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<UserEntity?> signInWithGoogle() async {
+    final googleSignIn = GoogleSignIn();
+    final googleUser = await googleSignIn.signIn();
+    
+    if (googleUser == null) return null;
+
+    final googleAuth = await googleUser.authentication;
+    final AuthCredential credential = GoogleAuthProvider.credential(
+      accessToken: googleAuth.accessToken,
+      idToken: googleAuth.idToken,
+    );
+
+    final userCredential = await _firebaseAuth.signInWithCredential(credential);
+    return _mapFirebaseUser(userCredential.user);
+  }
+
+  @override
   Future<void> logout() async {
     await _firebaseAuth.signOut();
+  }
+
+  @override
+  Future<void> updateUserProfile({String? displayName, String? bio, String? photoUrl}) async {
+    final user = _firebaseAuth.currentUser;
+    if (user != null) {
+      if (displayName != null) await user.updateDisplayName(displayName);
+      if (photoUrl != null) await user.updatePhotoURL(photoUrl);
+      
+      // Save bio to Firestore
+      if (bio != null) {
+        await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+          'bio': bio,
+          'updatedAt': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true));
+      }
+    }
   }
 
   UserEntity? _mapFirebaseUser(User? user) {

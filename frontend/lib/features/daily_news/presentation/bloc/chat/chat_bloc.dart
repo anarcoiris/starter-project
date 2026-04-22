@@ -1,8 +1,8 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../../data/data_sources/remote/chat_service.dart';
-import '../../../../../../core/analytics/analytics_repository.dart';
-import 'chat_event.dart';
-import 'chat_state.dart';
+import 'package:news_app_clean_architecture/features/daily_news/data/data_sources/remote/chat_service.dart';
+import 'package:news_app_clean_architecture/core/analytics/analytics_repository.dart';
+import 'package:news_app_clean_architecture/features/daily_news/presentation/bloc/chat/chat_event.dart';
+import 'package:news_app_clean_architecture/features/daily_news/presentation/bloc/chat/chat_state.dart';
 
 class ChatBloc extends Bloc<ChatEvent, ChatState> {
   final ChatService _chatService;

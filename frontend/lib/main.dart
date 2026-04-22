@@ -1,15 +1,13 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:news_app_clean_architecture/config/routes/routes.dart';
-import 'package:news_app_clean_architecture/core/network/backend_health.dart';
-import 'package:news_app_clean_architecture/features/daily_news/presentation/bloc/article/remote/remote_article_event.dart';
-import 'package:news_app_clean_architecture/features/daily_news/presentation/pages/home/daily_news.dart';
-import 'config/theme/app_themes.dart';
-import 'features/daily_news/presentation/bloc/article/remote/remote_article_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:news_app_clean_architecture/features/auth/presentation/bloc/auth_cubit.dart';
-import 'package:news_app_clean_architecture/features/auth/presentation/pages/login_page.dart';
+
+// Elegant Imports (Barrels)
+import 'package:news_app_clean_architecture/core/core.dart';
+import 'package:news_app_clean_architecture/config/config.dart';
+import 'package:news_app_clean_architecture/features/auth/auth.dart';
+import 'package:news_app_clean_architecture/features/daily_news/presentation/daily_news_presentation.dart';
 import 'injection_container.dart';
 
 Future<void> main() async {
