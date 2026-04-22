@@ -15,13 +15,11 @@ import 'package:news_app_clean_architecture/features/daily_news/data/data_source
 class ArticleRepositoryImpl implements ArticleRepository {
   final NewsApiService _newsApiService;
   final FirebaseDataSource _firebaseDataSource;
-  final FirebaseStorage _firebaseStorage;
   final AppDatabase _appDatabase;
 
   ArticleRepositoryImpl(
     this._newsApiService,
     this._firebaseDataSource,
-    this._firebaseStorage,
     this._appDatabase,
   );
   
@@ -98,27 +96,5 @@ class ArticleRepositoryImpl implements ArticleRepository {
   @override
   Future<void> saveArticle(ArticleEntity article) {
     return _appDatabase.articleDAO.insertArticle(ArticleModel.fromEntity(article));
-  }
-
-  @override
-  Future<String> uploadImage(File image, String userId) async {
-    try {
-      final fileName = "${DateTime.now().millisecondsSinceEpoch}.jpg";
-      final ref = _firebaseStorage.ref().child('users/$userId/articles/$fileName');
-      
-      developer.log('Iniciando subida de imagen: users/$userId/articles/$fileName', name: 'SymmetryStorage');
-      
-      final uploadTask = await ref.putFile(
-        image,
-        SettableMetadata(contentType: 'image/jpeg'),
-      );
-      
-      final downloadUrl = await uploadTask.ref.getDownloadURL();
-      developer.log('Imagen subida con éxito: $downloadUrl', name: 'SymmetryStorage');
-      return downloadUrl;
-    } catch (e) {
-      developer.log('Error en Firebase Storage: $e', name: 'SymmetryStorage', error: e);
-      throw Exception("Error al subir la imagen: $e");
-    }
   }
 }

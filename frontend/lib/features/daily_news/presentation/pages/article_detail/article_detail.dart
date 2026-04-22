@@ -9,6 +9,10 @@ import 'package:news_app_clean_architecture/features/daily_news/domain/entities/
 import 'package:news_app_clean_architecture/features/daily_news/presentation/bloc/article/local/local_article_bloc.dart';
 import 'package:news_app_clean_architecture/features/daily_news/presentation/bloc/article/local/local_article_event.dart';
 
+import 'package:news_app_clean_architecture/core/constants/constants.dart';
+import 'package:news_app_clean_architecture/features/daily_news/presentation/bloc/reward/reward_cubit.dart';
+import 'package:news_app_clean_architecture/features/daily_news/presentation/bloc/reward/reward_state.dart';
+
 class ArticleDetailsView extends HookWidget {
   final ArticleEntity? article;
 
@@ -16,14 +20,46 @@ class ArticleDetailsView extends HookWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => sl<LocalArticleBloc>(),
-      child: Scaffold(
-        appBar: _buildAppBar(context),
-        body: _buildBody(context),
-        floatingActionButton: _buildFloatingActionButton(),
+    useEffect(() {
+      _claimReward(context);
+      return null;
+    }, []);
+
+    return BlocListener<RewardCubit, RewardState>(
+      listener: (context, state) {
+        if (state is RewardClaimSuccess) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              backgroundColor: AppColors.primary,
+              behavior: SnackBarBehavior.floating,
+              duration: const Duration(seconds: 2),
+              content: Row(
+                children: [
+                  const Icon(Ionicons.flash, color: Colors.black, size: 18),
+                  const SizedBox(width: 8),
+                  Text(
+                    '¡+${state.amount.toInt()} SYM tokens acumulados!',
+                    style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+      },
+      child: BlocProvider(
+        create: (_) => sl<LocalArticleBloc>(),
+        child: Scaffold(
+          appBar: _buildAppBar(context),
+          body: _buildBody(context),
+          floatingActionButton: _buildFloatingActionButton(),
+        ),
       ),
     );
+  }
+
+  void _claimReward(BuildContext context) {
+    context.read<RewardCubit>().claimReward(kAlphaTesterId, article?.url ?? '');
   }
 
   PreferredSizeWidget _buildAppBar(BuildContext context) {
@@ -63,7 +99,7 @@ class ArticleDetailsView extends HookWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            article!.title ?? '',
+            article?.title ?? 'Sin Título',
             style: const TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
@@ -76,14 +112,14 @@ class ArticleDetailsView extends HookWidget {
               const Icon(Ionicons.person_circle_outline, size: 20, color: AppColors.primary),
               const SizedBox(width: 6),
               Text(
-                article!.author ?? 'Periodista Symmetry',
+                article?.author ?? 'Periodista Symmetry',
                 style: const TextStyle(fontSize: 14, color: Colors.white70, fontWeight: FontWeight.w600),
               ),
               const Spacer(),
               const Icon(Ionicons.time_outline, size: 16, color: AppColors.textMuted),
               const SizedBox(width: 4),
               Text(
-                article!.publishedAt?.split('T')[0] ?? '',
+                article?.publishedAt?.split('T')[0] ?? '',
                 style: const TextStyle(fontSize: 12, color: AppColors.textMuted),
               ),
             ],
@@ -108,42 +144,62 @@ class ArticleDetailsView extends HookWidget {
         ]
       ),
       child: Image.network(
-        article!.urlToImage ?? '', 
+        article?.urlToImage ?? '', 
         fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => Container(color: AppColors.surface),
+        errorBuilder: (_, __, ___) => Container(
+          color: AppColors.surface,
+          child: const Center(child: Icon(Ionicons.image_outline, color: AppColors.textMuted, size: 40)),
+        ),
       ),
     );
   }
 
   Widget _buildArticleContent(BuildContext context) {
-    final String markdownContent = """
-## Resumen
-${article!.description ?? ''}
-
----
-
-${article!.content ?? ''}
-
-> Nota del Editor: Este contenido ha sido verificado mediante el protocolo de consenso Symmetry.
-""";
+    final String description = article?.description ?? '';
+    final String content = article?.content ?? '';
+    
+    // Construct content robustly
+    final StringBuffer buffer = StringBuffer();
+    if (description.isNotEmpty) {
+      buffer.writeln('## Resumen');
+      buffer.writeln(description);
+      buffer.writeln('\n--- \n');
+    }
+    buffer.writeln(content);
+    buffer.writeln('\n\n> *Nota del Editor: Este contenido ha sido verificado mediante el protocolo de consenso Symmetry.*');
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
       child: MarkdownBody(
-        data: markdownContent,
+        data: buffer.toString(),
         selectable: true,
         styleSheet: MarkdownStyleSheet(
           p: const TextStyle(fontSize: 17, color: AppColors.textBody, height: 1.6),
+          h1: const TextStyle(fontSize: 24, color: Colors.white, fontWeight: FontWeight.bold),
           h2: const TextStyle(fontSize: 20, color: AppColors.primary, fontWeight: FontWeight.bold),
+          h3: const TextStyle(fontSize: 18, color: AppColors.primary, fontWeight: FontWeight.w600),
+          strong: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold),
+          em: const TextStyle(fontStyle: FontStyle.italic, color: Colors.white70),
+          listBullet: const TextStyle(color: AppColors.primary, fontSize: 18),
           blockquoteDecoration: BoxDecoration(
             color: AppColors.surface,
             border: const Border(left: BorderSide(color: AppColors.primary, width: 4)),
             borderRadius: BorderRadius.circular(4)
           ),
           blockquotePadding: const EdgeInsets.all(16),
+          blockquote: const TextStyle(color: Colors.white70, fontStyle: FontStyle.italic),
           horizontalRuleDecoration: BoxDecoration(
             border: Border(top: BorderSide(color: AppColors.primary.withOpacity(0.2), width: 1))
-          )
+          ),
+          code: const TextStyle(
+            backgroundColor: Colors.black26,
+            color: AppColors.success,
+            fontFamily: 'monospace',
+          ),
+          codeblockDecoration: BoxDecoration(
+            color: Colors.black26,
+            borderRadius: BorderRadius.circular(8),
+          ),
         ),
       ),
     );

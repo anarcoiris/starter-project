@@ -9,10 +9,15 @@ import 'package:news_app_clean_architecture/core/core.dart';
 import 'package:news_app_clean_architecture/config/config.dart';
 import 'package:news_app_clean_architecture/features/auth/auth.dart';
 import 'package:news_app_clean_architecture/features/daily_news/presentation/daily_news_presentation.dart';
+import 'package:news_app_clean_architecture/features/daily_news/presentation/bloc/reward/reward_cubit.dart';
 import 'injection_container.dart';
+import 'package:news_app_clean_architecture/core/util/bloc_observer.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialize logging
+  Bloc.observer = SimpleBlocObserver();
   
   try {
     await dotenv.load(fileName: ".env");
@@ -43,6 +48,7 @@ class MyApp extends StatelessWidget {
       providers: [
         BlocProvider<AuthCubit>(create: (context) => sl<AuthCubit>()),
         BlocProvider<RemoteArticlesBloc>(create: (context) => sl()..add(const GetArticles())),
+        BlocProvider<RewardCubit>(create: (context) => sl<RewardCubit>()),
       ],
       child: MaterialApp(
           title: 'Symmetry News',

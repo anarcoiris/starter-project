@@ -58,8 +58,12 @@ flutter:
   uses-material-design: true
 
   assets:
+    # WARNING: Do not include sensitive keys in .env if bundled as an asset.
+    # Use --dart-define for sensitive production keys.
     - .env
     - assets/images/
+
+
     - assets/fonts/muli/
 
   fonts:

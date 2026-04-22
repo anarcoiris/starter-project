@@ -10,6 +10,7 @@ import 'package:news_app_clean_architecture/features/daily_news/presentation/blo
 import 'package:news_app_clean_architecture/features/daily_news/presentation/bloc/article/remote/remote_article_state.dart';
 import 'package:news_app_clean_architecture/features/auth/presentation/bloc/auth_cubit.dart';
 import 'package:news_app_clean_architecture/features/daily_news/domain/repository/article_repository.dart';
+import 'package:news_app_clean_architecture/features/daily_news/domain/repository/storage_repository.dart';
 import 'package:news_app_clean_architecture/injection_container.dart';
 class PublishArticlePage extends StatefulWidget {
   const PublishArticlePage({Key? key}) : super(key: key);
@@ -119,8 +120,8 @@ class _PublishArticlePageState extends State<PublishArticlePage> {
       String imageUrl = 'https://images.unsplash.com/photo-1504711432869-efd597cdd042?auto=format&fit=crop&q=80&w=1000'; // Default
       
       if (_selectedImage != null) {
-        // Real upload to Firebase Storage
-        imageUrl = await sl<ArticleRepository>().uploadImage(_selectedImage!, authState.user.uid);
+        // Real upload to Firebase Storage using segregated repository
+        imageUrl = await sl<StorageRepository>().uploadImage(_selectedImage!, authState.user.uid);
       }
 
       final article = ArticleEntity(

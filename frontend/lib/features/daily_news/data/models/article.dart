@@ -24,7 +24,7 @@ class ArticleModel extends ArticleEntity {
           content: content,
         );
 
-  factory ArticleModel.fromRawData(Map<String, dynamic> map) {
+  factory ArticleModel.fromJson(Map<String, dynamic> map) {
     return ArticleModel(
       author: map['author'] ?? "",
       title: map['title'] ?? "",
@@ -37,9 +37,6 @@ class ArticleModel extends ArticleEntity {
       content: map['content'] ?? "",
     );
   }
-
-  factory ArticleModel.fromJson(Map<String, dynamic> map) =>
-      ArticleModel.fromRawData(map);
 
   ArticleEntity toEntity() => ArticleEntity(
         id: id,
@@ -64,7 +61,7 @@ class ArticleModel extends ArticleEntity {
         content: entity.content);
   }
 
-  Map<String, dynamic> toRawData() {
+  Map<String, dynamic> toJson() {
     return {
       'articleId': articleId,
       'author': author ?? "",
@@ -82,7 +79,10 @@ class ArticleModel extends ArticleEntity {
     };
   }
 
-  Map<String, dynamic> toJson() => toRawData();
-
-  String get articleId => url?.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '') ?? title?.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '') ?? "unknown";
-}
+  String get articleId {
+    if (url != null && url!.isNotEmpty) {
+      return url!.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_');
+    }
+    return (title ?? "unknown").replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_').toLowerCase();
+  }
+}

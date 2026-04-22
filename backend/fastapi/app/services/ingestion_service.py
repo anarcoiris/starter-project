@@ -106,14 +106,16 @@ class IngestionService:
                     "stream": False,
                     "format": "json"
                 },
-                timeout=30.0
+                timeout=120.0
             )
             
             if response.status_code == 200:
                 import json
                 result = response.json()
                 return json.loads(result["response"])
+            else:
+                logger.error(f"Ollama returned status {response.status_code}: {response.text}")
         except Exception as e:
-            logger.error(f"Ollama refactoring failed: {e}")
+            logger.error(f"DEBUG_AI_REFACTOR_FAIL ({type(e).__name__}): {e}")
             
         return {"title": title, "description": description}

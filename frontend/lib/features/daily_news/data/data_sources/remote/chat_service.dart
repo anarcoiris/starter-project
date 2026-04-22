@@ -9,23 +9,34 @@ class ChatService {
   ChatService(this._dio);
 
   Future<String> getChatResponse(String prompt) async {
+    developer.log('Iniciando pipeline de IA para el prompt: "${prompt.substring(0, prompt.length > 30 ? 30 : prompt.length)}..."', name: 'SymmetryChat');
+    
     // 1. Intento: Ollama Local (Máxima velocidad)
     try {
+      developer.log('Intentando IA Local (Ollama)...', name: 'SymmetryChat');
       final localResponse = await _getOllamaResponse(ApiConfig.ollamaLocalUrl, prompt, isRemote: false);
-      if (localResponse != null) return localResponse;
+      if (localResponse != null) {
+        developer.log('IA Local respondió con éxito.', name: 'SymmetryChat');
+        return localResponse;
+      }
     } catch (e) {
-      developer.log('Ollama local falló, intentando remoto...', name: 'SymmetryChat');
+      developer.log('IA local falló: $e', name: 'SymmetryChat');
     }
 
     // 2. Intento: Ollama Remoto (Cualquier usuario sin Ollama instalado)
     try {
+      developer.log('Intentando IA Remota (Nexus Proxy)...', name: 'SymmetryChat');
       final remoteResponse = await _getOllamaResponse(ApiConfig.ollamaRemoteUrl, prompt, isRemote: true);
-      if (remoteResponse != null) return remoteResponse;
+      if (remoteResponse != null) {
+        developer.log('IA Remota respondió con éxito.', name: 'SymmetryChat');
+        return remoteResponse;
+      }
     } catch (e) {
-      developer.log('Ollama remoto falló, intentando OpenAI...', name: 'SymmetryChat');
+      developer.log('IA remota falló: $e', name: 'SymmetryChat');
     }
 
     // 3. Intento: OpenAI (Último recurso)
+    developer.log('Recurriendo a OpenAI (Failover final)...', name: 'SymmetryChat');
     return await _getOpenAIResponse(prompt);
   }
 
