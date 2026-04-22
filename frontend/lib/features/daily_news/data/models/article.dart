@@ -74,22 +74,18 @@ class ArticleModel extends ArticleEntity {
 
   Map<String, dynamic> toJson() {
     return {
-      'articleId': articleId,
       'author': author ?? "",
       'title': title ?? "",
       'description': description ?? "",
       'url': url ?? "",
       'urlToImage': urlToImage ?? "",
-      'publishedAt': publishedAt ?? "",
+      'publishedAt': publishedAt ?? DateTime.now().toIso8601String(),
       'content': content ?? "",
       'source': 'Symmetry Journalist',
       'category': 'general',
-      'views': 0,
-      'readTime': 0,
-      'tokensEarned': tokensEarned ?? 0.0,
     };
-
   }
+
 
   Map<String, dynamic> toRawData() => toJson();
 

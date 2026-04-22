@@ -19,7 +19,8 @@ class ArticleRepository:
         return [Article(**item) for item in items]
 
 
-    async def create(self, article: ArticleCreate) -> Article:
+    async def create(self, article: Article) -> Article:
+
         doc = article.model_dump()
         logger.debug(f"Saving document to Mongo: {doc}")
         try:

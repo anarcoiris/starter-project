@@ -10,11 +10,29 @@ class ArticleService:
         return await self.repository.get_all(category=category, limit=limit)
 
 
-    async def create_article(self, article: ArticleCreate) -> Article:
-        # Add any business logic here (e.g. read time calculation if not provided)
-        if article.readTime == 0 and len(article.content) > 0:
-            # Simple heuristic: 200 words per minute
-            words = len(article.content.split())
-            article.readTime = max(1, words // 200)
+    async def create_article(self, article_create: ArticleCreate) -> Article:
+        import uuid
         
-        return await self.repository.create(article)
+        # 1. Generate system fields
+        article_id = str(uuid.uuid4())
+        url = article_create.url or f"https://symmetry.news/article/{article_id}"
+        
+        # 2. Calculate expected read time (200 words per minute)
+        words = len(article_create.content.split())
+        estimated_seconds = max(10, (words // 200) * 60)
+        
+        # 3. Construct the full Article model
+        article_dict = article_create.model_dump()
+        article_dict.update({
+            "articleId": article_id,
+            "url": url,
+            "expectedReadTime": estimated_seconds,
+            "views": 0,
+            "tokensEarned": 0.0,
+            "qualityScore": 1.0,
+            "fraudScore": 0.0
+        })
+        
+        full_article = Article(**article_dict)
+        return await self.repository.create(full_article)
+

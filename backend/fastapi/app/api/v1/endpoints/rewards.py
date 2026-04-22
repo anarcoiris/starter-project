@@ -27,3 +27,18 @@ async def get_balance(user_id: str, service: RewardService = Depends(get_reward_
     Get current off-chain SYM token balance.
     """
     return await service.get_balance(user_id)
+
+@router.post("/airdrop/{user_id}")
+async def trigger_airdrop(user_id: str, service: RewardService = Depends(get_reward_service)):
+    """
+    Manually trigger airdrop for a specific user (First 1,000 only).
+    """
+    return await service.process_airdrop(user_id)
+
+@router.post("/init-custodian")
+async def init_custodian(amount: float = 1000000.0, service: RewardService = Depends(get_reward_service)):
+    """
+    Initialize the custodian account with pre-mined tokens.
+    """
+    return await service.initialize_custodian(amount)
+

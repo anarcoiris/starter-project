@@ -6,31 +6,34 @@ class ArticleBase(BaseModel):
     author: str
     title: str
     description: str
-    url: str
     urlToImage: str
-    publishedAt: datetime
     content: str
+    publishedAt: datetime = Field(default_factory=datetime.now)
+    category: str = "general"
+
+class ArticleCreate(ArticleBase):
+    """Schema for creating a new article via API. 
+    Only user-contributed fields are present here.
+    """
+    source: str = "Symmetry User"
+    sourceId: Optional[str] = None
+    url: Optional[str] = None # Optional, system can generate one if missing
+
+class Article(ArticleBase):
+    """Full article model including system-managed fields."""
+    articleId: str
+    url: str
     source: str
-    category: str
+    sourceId: Optional[str] = None
     views: int = 0
     readTime: int = 0
     tokensEarned: float = 0.0
-
-class ArticleCreate(ArticleBase):
-    articleId: str
-    sourceId: Optional[str] = None
-    expectedReadTime: Optional[int] = None
-    qualityScore: Optional[float] = None
-    rewardEpoch: Optional[int] = None
-
-class Article(ArticleBase):
-    articleId: str
-    sourceId: Optional[str] = None
-    expectedReadTime: Optional[int] = None
-    qualityScore: Optional[float] = None
-    fraudScore: Optional[float] = None
-    rewardEpoch: Optional[int] = None
+    expectedReadTime: int = 30 # Default estimation in seconds
+    qualityScore: float = 1.0
+    fraudScore: float = 0.0
+    rewardEpoch: int = 0
     verifiedImpressionCount: int = 0
 
     class Config:
         from_attributes = True
+

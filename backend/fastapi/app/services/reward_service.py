@@ -40,9 +40,60 @@ class RewardService:
 
 
     async def get_balance(self, user_id: str):
+        # 1. Trigger Airdrop Check (First 1,000 users)
+        await self.process_airdrop(user_id)
+        
+        # 2. Get Balance
         user_reward = await self.reward_repo.get_user_reward(user_id)
         return {
             "userId": user_id,
             "balance": user_reward.totalBalance,
             "transactionCount": len(user_reward.transactions)
         }
+
+
+    async def initialize_custodian(self, amount: float = 1000000.0):
+        from app.core.config import settings
+        custodian_id = settings.custodian_email
+        
+        # Check if already initialized to avoid duplicates
+        balance_data = await self.get_balance(custodian_id)
+        if balance_data["balance"] > 0:
+            return {"status": "already_initialized", "balance": balance_data["balance"]}
+            
+        await self.reward_repo.add_reward(
+            user_id=custodian_id,
+            amount=amount,
+            reason="Initial Pre-mine"
+        )
+        return {"status": "initialized", "balance": amount}
+
+    async def process_airdrop(self, user_id: str):
+        from app.core.config import settings
+        
+        # 0. Skip if custodian
+        if user_id == settings.custodian_email:
+            return {"status": "skipped", "reason": "Custodian account"}
+
+        # 1. Check if user already got it
+
+        if await self.reward_repo.has_received_airdrop(user_id):
+            return {"status": "skipped", "reason": "Already received"}
+            
+        # 2. Check if limit reached
+        count = await self.reward_repo.get_airdrop_count()
+        if count >= settings.airdrop_limit:
+            return {"status": "skipped", "reason": "Limit reached"}
+            
+        # 3. Perform transfer from custodian
+        try:
+            await self.reward_repo.transfer_reward(
+                from_user_id=settings.custodian_email,
+                to_user_id=user_id,
+                amount=settings.airdrop_amount,
+                reason="Early Adopter Airdrop"
+            )
+            return {"status": "success", "amount": settings.airdrop_amount}
+        except Exception as e:
+            return {"status": "error", "message": str(e)}
+
