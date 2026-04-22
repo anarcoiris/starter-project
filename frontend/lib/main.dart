@@ -1,3 +1,4 @@
+import 'dart:developer' as developer;
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -12,8 +13,21 @@ import 'injection_container.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await dotenv.load(fileName: ".env");
-  await Firebase.initializeApp();
+  
+  try {
+    await dotenv.load(fileName: ".env");
+    developer.log('Dotenv cargado correctamente', name: 'SymmetryMain');
+  } catch (e) {
+    developer.log('Error al cargar .env: $e', name: 'SymmetryMain', error: e);
+  }
+
+  try {
+    await Firebase.initializeApp();
+    developer.log('Firebase inicializado', name: 'SymmetryMain');
+  } catch (e) {
+    developer.log('Error al inicializar Firebase: $e', name: 'SymmetryMain', error: e);
+  }
+
   await initializeDependencies();
   await probeBackendHealth(sl);
 

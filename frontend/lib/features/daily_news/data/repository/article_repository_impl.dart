@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:developer' as developer;
 import 'package:dio/dio.dart';
 import 'package:news_app_clean_architecture/core/constants/constants.dart';
 import 'package:news_app_clean_architecture/features/daily_news/data/data_sources/local/app_database.dart';
@@ -102,13 +103,18 @@ class ArticleRepositoryImpl implements ArticleRepository {
       final fileName = "${DateTime.now().millisecondsSinceEpoch}.jpg";
       final ref = _firebaseStorage.ref().child('users/$userId/articles/$fileName');
       
+      developer.log('Iniciando subida de imagen: users/$userId/articles/$fileName', name: 'SymmetryStorage');
+      
       final uploadTask = await ref.putFile(
         image,
         SettableMetadata(contentType: 'image/jpeg'),
       );
       
-      return await uploadTask.ref.getDownloadURL();
+      final downloadUrl = await uploadTask.ref.getDownloadURL();
+      developer.log('Imagen subida con éxito: $downloadUrl', name: 'SymmetryStorage');
+      return downloadUrl;
     } catch (e) {
+      developer.log('Error en Firebase Storage: $e', name: 'SymmetryStorage', error: e);
       throw Exception("Error al subir la imagen: $e");
     }
   }

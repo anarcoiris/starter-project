@@ -1,4 +1,5 @@
 import 'dart:ui' as ui;
+import 'dart:developer' as developer;
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -68,11 +69,14 @@ class ArticleWidget extends StatelessWidget {
             alignment: Alignment.center,
             child: const CupertinoActivityIndicator(),
           ),
-          errorWidget: (context, url, error) => Container(
-            height: 200,
-            color: AppColors.surfaceLight,
-            child: const Icon(Icons.broken_image, color: AppColors.textMuted),
-          ),
+          errorWidget: (context, url, error) {
+            developer.log('Error cargando imagen ($url): $error', name: 'SymmetryUI');
+            return Container(
+              height: 200,
+              color: AppColors.surfaceLight,
+              child: const Icon(Icons.broken_image, color: AppColors.textMuted),
+            );
+          },
         ),
         Positioned(
           bottom: 0,
