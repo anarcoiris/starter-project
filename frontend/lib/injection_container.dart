@@ -1,20 +1,21 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:get_it/get_it.dart';
 import 'package:dio/dio.dart';
-import 'package:news_app_clean_architecture/core/config/api_config.dart';
+
+// Elegant Imports (Barrels)
+import 'package:news_app_clean_architecture/core/core.dart';
+import 'package:news_app_clean_architecture/features/auth/auth.dart';
+import 'package:news_app_clean_architecture/features/daily_news/domain/daily_news_domain.dart';
+import 'package:news_app_clean_architecture/features/daily_news/presentation/daily_news_presentation.dart';
+
+// Data Sources (Non-exported for now to keep barrels semantic)
 import 'package:news_app_clean_architecture/features/daily_news/data/data_sources/remote/firebase_data_source.dart';
 import 'package:news_app_clean_architecture/features/daily_news/data/data_sources/remote/chat_service.dart';
 import 'package:news_app_clean_architecture/features/daily_news/data/data_sources/remote/news_api_service.dart';
 import 'package:news_app_clean_architecture/features/daily_news/data/repository/article_repository_impl.dart';
-import 'package:news_app_clean_architecture/features/daily_news/domain/repository/article_repository.dart';
-import 'package:news_app_clean_architecture/features/daily_news/domain/usecases/get_article.dart';
-import 'package:news_app_clean_architecture/features/daily_news/domain/usecases/post_article.dart';
-import 'package:news_app_clean_architecture/features/daily_news/presentation/bloc/article/remote/remote_article_bloc.dart';
 import 'package:news_app_clean_architecture/features/daily_news/data/data_sources/local/app_database.dart';
-import 'package:news_app_clean_architecture/features/daily_news/domain/usecases/get_saved_article.dart';
-import 'package:news_app_clean_architecture/features/daily_news/domain/usecases/remove_article.dart';
-import 'package:news_app_clean_architecture/features/daily_news/domain/usecases/save_article.dart';
-import 'package:news_app_clean_architecture/features/daily_news/presentation/bloc/article/local/local_article_bloc.dart';
 
 final sl = GetIt.instance;
 
@@ -25,7 +26,16 @@ Future<void> initializeDependencies() async {
   
   // Firebase
   sl.registerSingleton<FirebaseFirestore>(FirebaseFirestore.instance);
+  sl.registerSingleton<FirebaseAuth>(FirebaseAuth.instance);
+  sl.registerSingleton<FirebaseStorage>(FirebaseStorage.instance);
   sl.registerSingleton<FirebaseDataSource>(FirebaseDataSource(sl()));
+
+  // Analytics
+  sl.registerSingleton<AnalyticsRepository>(FirestoreAnalyticsImpl(sl(), sl()));
+
+  // Auth
+  sl.registerSingleton<AuthRepository>(AuthRepositoryImpl(sl()));
+  sl.registerFactory<AuthCubit>(() => AuthCubit(sl()));
 
   // Dio (Local Backend / FastAPI)
   final backendDio = Dio(
@@ -43,7 +53,7 @@ Future<void> initializeDependencies() async {
 
   // Repositories
   sl.registerSingleton<ArticleRepository>(
-    ArticleRepositoryImpl(sl(), sl(), sl())
+    ArticleRepositoryImpl(sl(), sl(), sl(), sl())
   );
   
   // UseCases
@@ -74,5 +84,9 @@ Future<void> initializeDependencies() async {
 
   sl.registerFactory<LocalArticleBloc>(
     ()=> LocalArticleBloc(sl(), sl(), sl())
+  );
+
+  sl.registerFactory<ChatBloc>(
+    () => ChatBloc(sl(), sl())
   );
 }

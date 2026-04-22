@@ -2,15 +2,12 @@ import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:news_app_clean_architecture/core/constants/app_colors.dart';
-import 'package:news_app_clean_architecture/features/daily_news/domain/entities/article.dart';
-import 'package:news_app_clean_architecture/features/daily_news/presentation/widgets/article_tile.dart';
-import 'package:news_app_clean_architecture/features/daily_news/presentation/widgets/cta_banner.dart';
-import 'package:news_app_clean_architecture/features/daily_news/presentation/widgets/owl_assistant.dart';
-import 'package:news_app_clean_architecture/features/daily_news/presentation/widgets/assistant_brain.dart';
-import 'package:news_app_clean_architecture/features/daily_news/presentation/bloc/article/remote/remote_article_bloc.dart';
-import 'package:news_app_clean_architecture/features/daily_news/presentation/bloc/article/remote/remote_article_event.dart';
-import 'package:news_app_clean_architecture/features/daily_news/presentation/bloc/article/remote/remote_article_state.dart';
+
+// Elegant Imports (Barrels)
+import 'package:news_app_clean_architecture/core/core.dart';
+import 'package:news_app_clean_architecture/features/daily_news/domain/daily_news_domain.dart';
+import 'package:news_app_clean_architecture/features/daily_news/presentation/daily_news_presentation.dart';
+import 'package:news_app_clean_architecture/injection_container.dart';
 
 class DailyNews extends StatefulWidget {
   const DailyNews({Key? key}) : super(key: key);
@@ -102,7 +99,7 @@ class _DailyNewsState extends State<DailyNews> {
       ),
       actions: [
         IconButton(
-          onPressed: () {},
+          onPressed: () => Navigator.pushNamed(context, '/Search'),
           icon: const Icon(Icons.search, color: AppColors.primary),
         ),
         const SizedBox(width: 8),
@@ -170,8 +167,10 @@ class _DailyNewsState extends State<DailyNews> {
       ),
       child: BottomNavigationBar(
         onTap: (index) {
+          if (index == 1) _onTopicsPressed(context);
           if (index == 2) _onPublishPressed(context);
           if (index == 3) _onShowSavedArticlesViewTapped(context);
+          if (index == 4) _onProfilePressed(context);
         },
         currentIndex: 0,
         backgroundColor: AppColors.background,
@@ -197,6 +196,7 @@ class _DailyNewsState extends State<DailyNews> {
   }
 
   void _onArticlePressed(BuildContext context, ArticleEntity article) {
+    sl<AnalyticsRepository>().trackArticleView(article);
     Navigator.pushNamed(context, '/ArticleDetails', arguments: article);
   }
 
@@ -206,6 +206,14 @@ class _DailyNewsState extends State<DailyNews> {
 
   void _onPublishPressed(BuildContext context) {
     Navigator.pushNamed(context, '/PublishArticle');
+  }
+
+  void _onProfilePressed(BuildContext context) {
+    Navigator.pushNamed(context, '/Profile');
+  }
+
+  void _onTopicsPressed(BuildContext context) {
+    Navigator.pushNamed(context, '/Topics');
   }
 
   Future<void> _onRefresh(BuildContext context) async {

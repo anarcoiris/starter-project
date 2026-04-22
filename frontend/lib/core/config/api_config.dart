@@ -7,4 +7,9 @@ class ApiConfig {
     'API_BASE_URL',
     defaultValue: 'https://uncovernews.ddns.net/api/v1',
   );
+
+  static const String ollamaBaseUrl = String.fromEnvironment(
+    'OLLAMA_BASE_URL',
+    defaultValue: 'http://10.0.2.2:11434', // Android emulator localhost
+  );
 }

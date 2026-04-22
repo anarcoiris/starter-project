@@ -1,23 +1,34 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:ionicons/ionicons.dart';
-import 'package:news_app_clean_architecture/core/constants/app_colors.dart';
-import 'package:news_app_clean_architecture/features/daily_news/data/data_sources/remote/chat_service.dart';
+
+// Elegant Imports (Barrels)
+import 'package:news_app_clean_architecture/core/core.dart';
+import 'package:news_app_clean_architecture/features/daily_news/presentation/daily_news_presentation.dart';
 import 'package:news_app_clean_architecture/injection_container.dart';
 
-class OwlAssistantPage extends StatefulWidget {
+class OwlAssistantPage extends StatelessWidget {
   const OwlAssistantPage({Key? key}) : super(key: key);
 
   @override
-  State<OwlAssistantPage> createState() => _OwlAssistantPageState();
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (context) => sl<ChatBloc>(),
+      child: const OwlAssistantView(),
+    );
+  }
 }
 
-class _OwlAssistantPageState extends State<OwlAssistantPage> {
+class OwlAssistantView extends StatefulWidget {
+  const OwlAssistantView({Key? key}) : super(key: key);
+
+  @override
+  State<OwlAssistantView> createState() => _OwlAssistantViewState();
+}
+
+class _OwlAssistantViewState extends State<OwlAssistantView> {
   final TextEditingController _controller = TextEditingController();
-  final List<Map<String, String>> _messages = [
-    {'role': 'assistant', 'content': 'Hola, soy el Búho de Symmetry. ¿En qué puedo ayudarte hoy?'},
-  ];
-  bool _isLoading = false;
   final ScrollController _scrollController = ScrollController();
 
   @override
@@ -39,24 +50,12 @@ class _OwlAssistantPageState extends State<OwlAssistantPage> {
     });
   }
 
-  Future<void> _sendMessage() async {
+  void _sendMessage(BuildContext context) {
     final text = _controller.text.trim();
     if (text.isEmpty) return;
 
-    setState(() {
-      _messages.add({'role': 'user', 'content': text});
-      _controller.clear();
-      _isLoading = true;
-    });
-    _scrollToBottom();
-
-    final chatService = sl<ChatService>();
-    final response = await chatService.getChatResponse(text);
-
-    setState(() {
-      _messages.add({'role': 'assistant', 'content': response});
-      _isLoading = false;
-    });
+    context.read<ChatBloc>().add(ChatMessageSent(text));
+    _controller.clear();
     _scrollToBottom();
   }
 
@@ -64,49 +63,56 @@ class _OwlAssistantPageState extends State<OwlAssistantPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.transparent,
-      body: Stack(
-        children: [
-          // Glassmorphism background
-          GestureDetector(
-            onTap: () => Navigator.pop(context),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-              child: Container(color: Colors.black.withValues(alpha: 0.7)),
-            ),
-          ),
-          
-          // Chat Container
-          Center(
-            child: Container(
-              width: MediaQuery.of(context).size.width * 0.9,
-              height: MediaQuery.of(context).size.height * 0.7,
-              decoration: BoxDecoration(
-                color: AppColors.surface.withValues(alpha: 0.9),
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.primary.withValues(alpha: 0.2),
-                    blurRadius: 40,
-                    spreadRadius: 5,
-                  )
-                ],
-              ),
-              child: Column(
-                children: [
-                  _buildHeader(),
-                  Expanded(child: _buildMessageList()),
-                  _buildInput(),
-                ],
+      body: BlocListener<ChatBloc, ChatState>(
+        listener: (context, state) {
+          if (state is ChatSuccess || state is ChatLoading) {
+            _scrollToBottom();
+          }
+        },
+        child: Stack(
+          children: [
+            // Glassmorphism background
+            GestureDetector(
+              onTap: () => Navigator.pop(context),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                child: Container(color: Colors.black.withValues(alpha: 0.7)),
               ),
             ),
-          ),
-        ],
+            
+            // Chat Container
+            Center(
+              child: Container(
+                width: MediaQuery.of(context).size.width * 0.9,
+                height: MediaQuery.of(context).size.height * 0.7,
+                decoration: BoxDecoration(
+                  color: AppColors.surface.withValues(alpha: 0.9),
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.primary.withValues(alpha: 0.2),
+                      blurRadius: 40,
+                      spreadRadius: 5,
+                    )
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    _buildHeader(context),
+                    Expanded(child: _buildMessageList()),
+                    _buildInput(context),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -147,17 +153,21 @@ class _OwlAssistantPageState extends State<OwlAssistantPage> {
   }
 
   Widget _buildMessageList() {
-    return ListView.builder(
-      controller: _scrollController,
-      padding: const EdgeInsets.all(16),
-      itemCount: _messages.length + (_isLoading ? 1 : 0),
-      itemBuilder: (context, index) {
-        if (index == _messages.length) {
-          return _buildLoadingBubble();
-        }
-        final msg = _messages[index];
-        final isUser = msg['role'] == 'user';
-        return _buildChatBubble(msg['content']!, isUser);
+    return BlocBuilder<ChatBloc, ChatState>(
+      builder: (context, state) {
+        return ListView.builder(
+          controller: _scrollController,
+          padding: const EdgeInsets.all(16),
+          itemCount: state.messages.length + (state.isLoading ? 1 : 0),
+          itemBuilder: (context, index) {
+            if (index == state.messages.length) {
+              return _buildLoadingBubble();
+            }
+            final msg = state.messages[index];
+            final isUser = msg['role'] == 'user';
+            return _buildChatBubble(msg['content']!, isUser);
+          },
+        );
       },
     );
   }
@@ -208,7 +218,7 @@ class _OwlAssistantPageState extends State<OwlAssistantPage> {
     );
   }
 
-  Widget _buildInput() {
+  Widget _buildInput(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -231,13 +241,13 @@ class _OwlAssistantPageState extends State<OwlAssistantPage> {
                 ),
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               ),
-              onSubmitted: (_) => _sendMessage(),
+              onSubmitted: (_) => _sendMessage(context),
             ),
           ),
           const SizedBox(width: 8),
           IconButton(
             icon: const Icon(Ionicons.send, color: AppColors.primary),
-            onPressed: _sendMessage,
+            onPressed: () => _sendMessage(context),
           )
         ],
       ),
