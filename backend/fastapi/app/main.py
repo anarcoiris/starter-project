@@ -5,7 +5,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 
 from app.core.config import settings
 from app.mongo_schema import initialize_mongo_schema
-from app.api.v1.endpoints import articles, ollama
+from app.api.v1.endpoints import articles, ollama, ingest
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -36,6 +36,7 @@ app = FastAPI(
 api_router = APIRouter(prefix="/api/v1")
 api_router.include_router(articles.router, prefix="/articles", tags=["Articles"])
 api_router.include_router(ollama.router, prefix="/ollama", tags=["Ollama"])
+api_router.include_router(ingest.router, prefix="/ingest", tags=["Ingestion"])
 
 app.include_router(api_router)
 
