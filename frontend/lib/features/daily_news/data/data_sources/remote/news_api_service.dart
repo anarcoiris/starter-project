@@ -14,7 +14,7 @@ class NewsApiService {
   }) async {
     try {
       final response = await _dio.get(
-        '/articles/',
+        'articles/',
         queryParameters: {
           'limit': 20,
         },
@@ -38,7 +38,7 @@ class NewsApiService {
   }) async {
     try {
       final response = await _dio.post(
-        '/articles/',
+        'articles/',
         data: article?.toJson(),
       );
 

@@ -28,7 +28,7 @@ class ArticleRepositoryImpl implements ArticleRepository {
   @override
   Future<DataState<List<ArticleEntity>>> getNewsArticles() async {
    try {
-     // Local API is primary
+     developer.log('Solicitando artículos al backend local/remoto...', name: 'SymmetryArticles');
      final httpResponse = await _newsApiService.getNewsArticles(
        apiKey: newsAPIKey,
        country: countryQuery,
@@ -36,11 +36,14 @@ class ArticleRepositoryImpl implements ArticleRepository {
      );
 
      if (httpResponse.response.statusCode == HttpStatus.ok) {
+       developer.log('Artículos recibidos con éxito (${httpResponse.data.length})', name: 'SymmetryArticles');
        return DataSuccess(httpResponse.data);
      } else {
+       developer.log('Error en API local/remoto (${httpResponse.response.statusCode}), usando Firebase...', name: 'SymmetryArticles');
        return await _getFirebaseFallback();
      }
    } catch (e) {
+     developer.log('Fallo total en API local/remoto: $e, usando Firebase...', name: 'SymmetryArticles');
      return await _getFirebaseFallback();
    }
   }

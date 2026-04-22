@@ -40,7 +40,7 @@ class ChatService {
       developer.log('Petición a Ollama (${isRemote ? "Remoto" : "Local"}): $baseUrl', name: 'SymmetryChat');
 
       final response = await dio.post(
-        '/api/generate',
+        'api/generate',
         data: {
           'model': 'qwen2.5:3b',
           'prompt': prompt,
