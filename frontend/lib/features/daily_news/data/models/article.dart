@@ -13,6 +13,7 @@ class ArticleModel extends ArticleEntity {
     String? urlToImage,
     String? publishedAt,
     String? content,
+    double? tokensEarned,
   }) : super(
           id: id,
           author: author,
@@ -22,9 +23,11 @@ class ArticleModel extends ArticleEntity {
           urlToImage: urlToImage,
           publishedAt: publishedAt,
           content: content,
+          tokensEarned: tokensEarned,
         );
 
-  factory ArticleModel.fromRawData(Map<String, dynamic> map) {
+
+  factory ArticleModel.fromJson(Map<String, dynamic> map) {
     return ArticleModel(
       author: map['author'] ?? "",
       title: map['title'] ?? "",
@@ -35,11 +38,12 @@ class ArticleModel extends ArticleEntity {
           : kDefaultImage,
       publishedAt: map['publishedAt'] ?? "",
       content: map['content'] ?? "",
+      tokensEarned: (map['tokensEarned'] as num?)?.toDouble() ?? 0.0,
     );
+
   }
 
-  factory ArticleModel.fromJson(Map<String, dynamic> map) =>
-      ArticleModel.fromRawData(map);
+  factory ArticleModel.fromRawData(Map<String, dynamic> map) => ArticleModel.fromJson(map);
 
   ArticleEntity toEntity() => ArticleEntity(
         id: id,
@@ -50,7 +54,9 @@ class ArticleModel extends ArticleEntity {
         urlToImage: urlToImage,
         publishedAt: publishedAt,
         content: content,
+        tokensEarned: tokensEarned,
       );
+
 
   factory ArticleModel.fromEntity(ArticleEntity entity) {
     return ArticleModel(
@@ -61,10 +67,12 @@ class ArticleModel extends ArticleEntity {
         url: entity.url,
         urlToImage: entity.urlToImage,
         publishedAt: entity.publishedAt,
-        content: entity.content);
+        content: entity.content,
+        tokensEarned: entity.tokensEarned);
   }
 
-  Map<String, dynamic> toRawData() {
+
+  Map<String, dynamic> toJson() {
     return {
       'articleId': articleId,
       'author': author ?? "",
@@ -78,11 +86,17 @@ class ArticleModel extends ArticleEntity {
       'category': 'general',
       'views': 0,
       'readTime': 0,
-      'tokensEarned': 0.0,
+      'tokensEarned': tokensEarned ?? 0.0,
     };
+
   }
 
-  Map<String, dynamic> toJson() => toRawData();
+  Map<String, dynamic> toRawData() => toJson();
 
-  String get articleId => url?.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '') ?? title?.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '') ?? "unknown";
-}
+  String get articleId {
+    if (url != null && url!.isNotEmpty) {
+      return url!.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_');
+    }
+    return (title ?? "unknown").replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_').toLowerCase();
+  }
+}

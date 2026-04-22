@@ -14,11 +14,13 @@ class NewsApiService {
   }) async {
     try {
       final response = await _dio.get(
-        '/articles/',
+        'articles/',
         queryParameters: {
+          'category': category,
           'limit': 20,
         },
       );
+
 
       final List<dynamic> data = response.data is List
           ? response.data
@@ -38,7 +40,7 @@ class NewsApiService {
   }) async {
     try {
       final response = await _dio.post(
-        '/articles/',
+        'articles/',
         data: article?.toJson(),
       );
 

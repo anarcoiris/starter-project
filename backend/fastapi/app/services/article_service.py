@@ -6,8 +6,9 @@ class ArticleService:
     def __init__(self, repository: ArticleRepository):
         self.repository = repository
 
-    async def list_latest_articles(self, limit: int = 10) -> List[Article]:
-        return await self.repository.get_all(limit=limit)
+    async def list_latest_articles(self, category: str = None, limit: int = 10) -> List[Article]:
+        return await self.repository.get_all(category=category, limit=limit)
+
 
     async def create_article(self, article: ArticleCreate) -> Article:
         # Add any business logic here (e.g. read time calculation if not provided)

@@ -5,8 +5,10 @@ abstract class RemoteArticlesEvent {
 }
 
 class GetArticles extends RemoteArticlesEvent {
-  const GetArticles();
+  final String? category;
+  const GetArticles({this.category});
 }
+
 
 class PostArticle extends RemoteArticlesEvent {
   final ArticleEntity article;

@@ -20,7 +20,8 @@ class RemoteArticlesBloc extends Bloc<RemoteArticlesEvent,RemoteArticlesState> {
 
 
   void onGetArticles(GetArticles event, Emitter < RemoteArticlesState > emit) async {
-    final dataState = await _getArticleUseCase();
+    final dataState = await _getArticleUseCase(params: event.category);
+
 
     if (dataState is DataSuccess) {
       emit(

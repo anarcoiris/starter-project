@@ -20,9 +20,16 @@ El objetivo es:
 
 - y alinear incentivos con la calidad del ecosistema.
 
-## 1.1 Modo degradado (Fase 1 / stub)
+## 1.1 Estado de Implementación (Abril 2026)
 
-La implementación inicial puede limitarse a **eventos de lectura persistidos** (`read_events`) y un **score placeholder**, sin pool semanal, sin emisión on-chain y sin motor completo de distribución descrito más abajo. Consulta la Fase 1 en [PHASE1_BACKLOG.md](../PHASE1_BACKLOG.md) y [ADR 001](../ADR_001_prototype_rest_mongo_vs_firestore.md).
+- **Fase 1 (COMPLETADA)**:
+    - Persistencia de `read_events` en MongoDB y transacciones de recompensa.
+    - Sistema de reclamo básico con prevención de duplicados por `articleId`.
+    - Integración en Frontend mediante `RewardCubit` y `BlocListener`.
+- **Fase 2 (PLANIFICADA)**:
+    - **Trust Multiplier**: Implementación del sistema de confianza basado en efecto de red (reputación acumulada).
+    - **Scoring Layer**: Validación de lectura real mediante profundidad de scroll y tiempo activo.
+    - **Anti-Fraud**: Heurísticas para detectar patrones mecánicos.
 
 ---
 

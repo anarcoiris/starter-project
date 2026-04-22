@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:developer' as developer;
 import 'package:dio/dio.dart';
 import 'package:news_app_clean_architecture/core/constants/constants.dart';
 import 'package:news_app_clean_architecture/features/daily_news/data/data_sources/local/app_database.dart';
@@ -14,32 +15,34 @@ import 'package:news_app_clean_architecture/features/daily_news/data/data_source
 class ArticleRepositoryImpl implements ArticleRepository {
   final NewsApiService _newsApiService;
   final FirebaseDataSource _firebaseDataSource;
-  final FirebaseStorage _firebaseStorage;
   final AppDatabase _appDatabase;
 
   ArticleRepositoryImpl(
     this._newsApiService,
     this._firebaseDataSource,
-    this._firebaseStorage,
     this._appDatabase,
   );
   
   @override
-  Future<DataState<List<ArticleEntity>>> getNewsArticles() async {
+  Future<DataState<List<ArticleEntity>>> getNewsArticles({String? category}) async {
    try {
-     // Local API is primary
+     developer.log('Solicitando artículos al backend local/remoto... Categoría: $category', name: 'SymmetryArticles');
      final httpResponse = await _newsApiService.getNewsArticles(
        apiKey: newsAPIKey,
        country: countryQuery,
-       category: categoryQuery,
+       category: category ?? categoryQuery,
      );
 
+
      if (httpResponse.response.statusCode == HttpStatus.ok) {
+       developer.log('Artículos recibidos con éxito (${httpResponse.data.length})', name: 'SymmetryArticles');
        return DataSuccess(httpResponse.data);
      } else {
+       developer.log('Error en API local/remoto (${httpResponse.response.statusCode}), usando Firebase...', name: 'SymmetryArticles');
        return await _getFirebaseFallback();
      }
    } catch (e) {
+     developer.log('Fallo total en API local/remoto: $e, usando Firebase...', name: 'SymmetryArticles');
      return await _getFirebaseFallback();
    }
   }
@@ -60,26 +63,33 @@ class ArticleRepositoryImpl implements ArticleRepository {
   Future<DataState<void>> postArticle(ArticleEntity article) async {
     final model = ArticleModel.fromEntity(article);
     try {
+      developer.log('Intentando publicar artículo en API local/remoto...', name: 'SymmetryArticles');
       final httpResponse = await _newsApiService.postArticle(article: model);
       
       if (httpResponse.response.statusCode == HttpStatus.ok || httpResponse.response.statusCode == HttpStatus.created) {
+        developer.log('Artículo publicado con éxito en API.', name: 'SymmetryArticles');
         return DataSuccess(null);
       } else {
+        developer.log('API respondió con error: ${httpResponse.response.statusCode}. Intentando fallback...', name: 'SymmetryArticles');
         throw Exception("Local API failed with status ${httpResponse.response.statusCode}");
       }
     } catch (e) {
+      developer.log('Error al publicar en API: $e. Intentando Firebase...', name: 'SymmetryArticles');
       // Fallback to Firebase
       try {
         await _firebaseDataSource.postArticle(model);
+        developer.log('Artículo publicado con éxito en Firebase (Fallback).', name: 'SymmetryArticles');
         return DataSuccess(null);
       } catch (firebaseError) {
+        developer.log('FALLO TOTAL: No se pudo publicar en ninguna plataforma: $firebaseError', name: 'SymmetryArticles');
         return DataFailed(DioException(
-          error: "Failed to post to both backends",
+          error: "Error crítico: Fallo en API y Firebase. Revisa conexión y logs de Storage.",
           requestOptions: RequestOptions(path: 'articles')
         ));
       }
     }
   }
+
 
   @override
   Future<List<ArticleEntity>> getSavedArticles() async {
@@ -94,22 +104,5 @@ class ArticleRepositoryImpl implements ArticleRepository {
   @override
   Future<void> saveArticle(ArticleEntity article) {
     return _appDatabase.articleDAO.insertArticle(ArticleModel.fromEntity(article));
-  }
-
-  @override
-  Future<String> uploadImage(File image, String userId) async {
-    try {
-      final fileName = "${DateTime.now().millisecondsSinceEpoch}.jpg";
-      final ref = _firebaseStorage.ref().child('users/$userId/articles/$fileName');
-      
-      final uploadTask = await ref.putFile(
-        image,
-        SettableMetadata(contentType: 'image/jpeg'),
-      );
-      
-      return await uploadTask.ref.getDownloadURL();
-    } catch (e) {
-      throw Exception("Error al subir la imagen: $e");
-    }
   }
 }

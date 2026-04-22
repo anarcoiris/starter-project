@@ -1,4 +1,5 @@
 import 'dart:ui' as ui;
+import 'dart:developer' as developer;
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -68,11 +69,14 @@ class ArticleWidget extends StatelessWidget {
             alignment: Alignment.center,
             child: const CupertinoActivityIndicator(),
           ),
-          errorWidget: (context, url, error) => Container(
-            height: 200,
-            color: AppColors.surfaceLight,
-            child: const Icon(Icons.broken_image, color: AppColors.textMuted),
-          ),
+          errorWidget: (context, url, error) {
+            developer.log('Error cargando imagen ($url): $error', name: 'SymmetryUI');
+            return Container(
+              height: 200,
+              color: AppColors.surfaceLight,
+              child: const Icon(Icons.broken_image, color: AppColors.textMuted),
+            );
+          },
         ),
         Positioned(
           bottom: 0,
@@ -192,6 +196,27 @@ class ArticleWidget extends StatelessWidget {
               ),
               const Spacer(),
               const Icon(Icons.share_outlined, size: 16, color: AppColors.primary),
+              if ((article!.tokensEarned ?? 0) > 0) ...[
+                const SizedBox(width: 12),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.flash_on, size: 10, color: AppColors.primary),
+                      const SizedBox(width: 2),
+                      Text(
+                        '+${article!.tokensEarned?.toInt()} SYM',
+                        style: const TextStyle(color: AppColors.primary, fontSize: 9, fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ],
           ),
         ],

@@ -9,6 +9,8 @@ import 'package:news_app_clean_architecture/features/daily_news/domain/daily_new
 import 'package:news_app_clean_architecture/features/daily_news/presentation/daily_news_presentation.dart';
 import 'package:news_app_clean_architecture/injection_container.dart';
 
+import 'package:news_app_clean_architecture/features/daily_news/data/data_sources/remote/reward_api_service.dart';
+
 class DailyNews extends StatefulWidget {
   const DailyNews({Key? key}) : super(key: key);
 
@@ -21,11 +23,27 @@ class _DailyNewsState extends State<DailyNews> {
   bool _isOwlVisible = true;
   Timer? _visibilityTimer;
   String _assistantMessage = 'Hola, soy tu asistente Owl. Toca aquí para analizar noticias.';
+  double _balance = 0.0;
 
   @override
   void initState() {
     super.initState();
     _scrollController = ScrollController();
+    _fetchBalance();
+  }
+
+  void _fetchBalance() async {
+    try {
+      final result = await sl<RewardApiService>().getBalance(kAlphaTesterId);
+
+      if (mounted) {
+        setState(() {
+          _balance = (result['balance'] as num).toDouble();
+        });
+      }
+    } catch (e) {
+      debugPrint('Error fetching balance: $e');
+    }
   }
 
   @override
@@ -79,7 +97,7 @@ class _DailyNewsState extends State<DailyNews> {
           Container(
             padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.15),
+              color: AppColors.primary.withOpacity(0.15),
               shape: BoxShape.circle,
               border: Border.all(color: AppColors.primary, width: 1.5),
             ),
@@ -98,12 +116,47 @@ class _DailyNewsState extends State<DailyNews> {
         ],
       ),
       actions: [
+        _buildBalanceWidget(),
         IconButton(
           onPressed: () => Navigator.pushNamed(context, '/Search'),
           icon: const Icon(Icons.search, color: AppColors.primary),
         ),
         const SizedBox(width: 8),
       ],
+    );
+  }
+
+  Widget _buildBalanceWidget() {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 10),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.primary.withOpacity(0.3)),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withOpacity(0.1),
+            blurRadius: 8,
+            spreadRadius: 1,
+          )
+        ]
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.flash_on, color: AppColors.primary, size: 16),
+          const SizedBox(width: 4),
+          Text(
+            '${_balance.toInt()} SYM',
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 13,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -167,11 +220,13 @@ class _DailyNewsState extends State<DailyNews> {
       ),
       child: BottomNavigationBar(
         onTap: (index) {
+          if (index == 0) context.read<RemoteArticlesBloc>().add(const GetArticles());
           if (index == 1) _onTopicsPressed(context);
           if (index == 2) _onPublishPressed(context);
           if (index == 3) _onShowSavedArticlesViewTapped(context);
           if (index == 4) _onProfilePressed(context);
         },
+
         currentIndex: 0,
         backgroundColor: AppColors.background,
         selectedItemColor: AppColors.primary,

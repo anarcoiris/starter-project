@@ -64,3 +64,8 @@ async def initialize_mongo_schema(db: Any) -> None:
     await db["articles"].create_index([("category", ASCENDING), ("publishedAt", DESCENDING)])
     await db["articles"].create_index([("author", ASCENDING)])
     await db["articles"].create_index([("articleId", ASCENDING)], unique=True, sparse=True)
+    
+    # LLM Cache Indexes
+    await db["llm_cache"].create_index([("key", ASCENDING)], unique=True)
+    await db["llm_cache"].create_index([("timestamp", DESCENDING)])
+

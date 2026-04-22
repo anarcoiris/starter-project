@@ -13,8 +13,13 @@ def get_article_service(request: Request) -> ArticleService:
     return ArticleService(repository)
 
 @router.get("/", response_model=List[Article])
-async def list_articles(limit: int = 10, service: ArticleService = Depends(get_article_service)):
-    return await service.list_latest_articles(limit=limit)
+async def list_articles(
+    category: str = None,
+    limit: int = 10, 
+    service: ArticleService = Depends(get_article_service)
+):
+    return await service.list_latest_articles(category=category, limit=limit)
+
 
 @router.post("/", response_model=Article)
 async def create_article(article: ArticleCreate, service: ArticleService = Depends(get_article_service)):
