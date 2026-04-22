@@ -11,19 +11,18 @@ class ApiConfig {
     defaultValue: 'https://uncovernews.ddns.net/api/v1',
   );
 
-  static String get ollamaBaseUrl {
-    const fromEnv = String.fromEnvironment('OLLAMA_BASE_URL');
+  static String get ollamaLocalUrl {
+    const fromEnv = String.fromEnvironment('OLLAMA_LOCAL_URL');
     if (fromEnv.isNotEmpty) return fromEnv;
 
     if (kIsWeb) return 'http://localhost:11434';
     
-    // Check for Android specifically, otherwise use localhost
     try {
       if (Platform.isAndroid) return 'http://10.0.2.2:11434';
-    } catch (_) {
-      // In case Platform is not available (some web configurations)
-    }
+    } catch (_) {}
     
     return 'http://localhost:11434';
   }
+
+  static String get ollamaRemoteUrl => '$backendBaseUrl/ollama';
 }
