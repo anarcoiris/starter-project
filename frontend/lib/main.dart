@@ -33,8 +33,13 @@ Future<void> main() async {
     developer.log('Error al inicializar Firebase: $e', name: 'SymmetryMain', error: e);
   }
 
-  await initializeDependencies();
-  await probeBackendHealth(sl);
+  try {
+    await initializeDependencies();
+    await probeBackendHealth(sl);
+  } catch (e) {
+    developer.log('Error crítico de inicialización: $e', name: 'SymmetryMain', error: e);
+  }
+
 
   runApp(const MyApp());
 }

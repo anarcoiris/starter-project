@@ -1,4 +1,4 @@
-package com.company.uncover_news
+package com.anarcoiris.uncovernews
 
 import io.flutter.embedding.android.FlutterActivity
 

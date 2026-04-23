@@ -7,5 +7,7 @@ abstract class AuthRepository {
   Future<void> logout();
   Future<void> updateUserProfile({String? displayName, String? bio, String? photoUrl});
   Stream<UserEntity?> get onAuthStateChanged;
+  Stream<UserEntity?> getUserProfile(String uid);
   UserEntity? get currentUser;
 }
+

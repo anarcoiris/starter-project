@@ -1,0 +1,12 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: 'symmetry-api'
+    static_configs:
+      - targets: ['api:8000']
+
+  - job_name: 'redpanda'
+    static_configs:
+      - targets: ['redpanda:9644']

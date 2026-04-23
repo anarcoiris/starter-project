@@ -80,7 +80,7 @@ class _$AppDatabase extends AppDatabase {
     Callback? callback,
   ]) async {
     final databaseOptions = sqflite.OpenDatabaseOptions(
-      version: 1,
+      version: 2,
       onConfigure: (database) async {
         await database.execute('PRAGMA foreign_keys = ON');
         await callback?.onConfigure?.call(database);
@@ -96,7 +96,7 @@ class _$AppDatabase extends AppDatabase {
       },
       onCreate: (database, version) async {
         await database.execute(
-            'CREATE TABLE IF NOT EXISTS `article` (`id` INTEGER, `author` TEXT, `title` TEXT, `description` TEXT, `url` TEXT, `urlToImage` TEXT, `publishedAt` TEXT, `content` TEXT, PRIMARY KEY (`id`))');
+            'CREATE TABLE IF NOT EXISTS `article` (`articleId` TEXT, `author` TEXT, `title` TEXT, `description` TEXT, `url` TEXT, `urlToImage` TEXT, `publishedAt` TEXT, `content` TEXT, `tokensEarned` REAL, PRIMARY KEY (`articleId`))');
 
         await callback?.onCreate?.call(database, version);
       },
@@ -119,28 +119,30 @@ class _$ArticleDao extends ArticleDao {
             database,
             'article',
             (ArticleModel item) => <String, Object?>{
-                  'id': item.id,
+                  'articleId': item.articleId,
                   'author': item.author,
                   'title': item.title,
                   'description': item.description,
                   'url': item.url,
                   'urlToImage': item.urlToImage,
                   'publishedAt': item.publishedAt,
-                  'content': item.content
+                  'content': item.content,
+                  'tokensEarned': item.tokensEarned
                 }),
         _articleModelDeletionAdapter = DeletionAdapter(
             database,
             'article',
-            ['id'],
+            ['articleId'],
             (ArticleModel item) => <String, Object?>{
-                  'id': item.id,
+                  'articleId': item.articleId,
                   'author': item.author,
                   'title': item.title,
                   'description': item.description,
                   'url': item.url,
                   'urlToImage': item.urlToImage,
                   'publishedAt': item.publishedAt,
-                  'content': item.content
+                  'content': item.content,
+                  'tokensEarned': item.tokensEarned
                 });
 
   final sqflite.DatabaseExecutor database;
@@ -157,14 +159,15 @@ class _$ArticleDao extends ArticleDao {
   Future<List<ArticleModel>> getArticles() async {
     return _queryAdapter.queryList('SELECT * FROM article',
         mapper: (Map<String, Object?> row) => ArticleModel(
-            id: row['id'] as int?,
+            articleId: row['articleId'] as String?,
             author: row['author'] as String?,
             title: row['title'] as String?,
             description: row['description'] as String?,
             url: row['url'] as String?,
             urlToImage: row['urlToImage'] as String?,
             publishedAt: row['publishedAt'] as String?,
-            content: row['content'] as String?));
+            content: row['content'] as String?,
+            tokensEarned: row['tokensEarned'] as double?));
   }
 
   @override

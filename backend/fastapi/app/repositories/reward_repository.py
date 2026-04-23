@@ -21,8 +21,14 @@ class RewardRepository:
             timestamp=datetime.now()
         )
         
-        await self.collection.update_one(
-            {"userId": user_id},
+        # Atomically prevent duplicate claims for the same reference_id
+        query = {"userId": user_id}
+        if reference_id:
+            # Only match if this referenceId is NOT in any existing transaction
+            query["transactions.referenceId"] = {"$ne": reference_id}
+
+        result = await self.collection.update_one(
+            query,
             {
                 "$inc": {"totalBalance": amount},
                 "$push": {"transactions": transaction.model_dump()},
@@ -30,7 +36,16 @@ class RewardRepository:
             },
             upsert=True
         )
+        
+        # If modified_count is 0 and it wasn't an upsert, it means the referenceId already exists
+        if result.modified_count == 0 and result.upserted_id is None:
+            # Verify if it was indeed a duplicate
+            existing = await self.collection.find_one({"userId": user_id, "transactions.referenceId": reference_id})
+            if existing:
+                return None # Signal duplicate
+                
         return transaction
+
 
     async def transfer_reward(self, from_user_id: str, to_user_id: str, amount: float, reason: str):
         # 1. Deduct from sender

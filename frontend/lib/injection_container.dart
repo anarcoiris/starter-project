@@ -11,6 +11,8 @@ import 'package:news_app_clean_architecture/features/auth/auth.dart';
 import 'package:news_app_clean_architecture/features/daily_news/domain/daily_news_domain.dart';
 import 'package:news_app_clean_architecture/features/daily_news/presentation/daily_news_presentation.dart';
 import 'package:news_app_clean_architecture/features/daily_news/presentation/bloc/reward/reward_cubit.dart';
+import 'package:floor/floor.dart';
+
 
 
 // Data Sources (Non-exported for now to keep barrels semantic)
@@ -20,7 +22,9 @@ import 'package:news_app_clean_architecture/features/daily_news/data/data_source
 import 'package:news_app_clean_architecture/features/daily_news/data/data_sources/remote/reward_api_service.dart';
 import 'package:news_app_clean_architecture/features/daily_news/domain/repository/storage_repository.dart';
 import 'package:news_app_clean_architecture/features/daily_news/data/repository/article_repository_impl.dart';
+import 'package:news_app_clean_architecture/features/daily_news/data/repository/reward_repository_impl.dart';
 import 'package:news_app_clean_architecture/features/daily_news/data/repository/storage_repository_impl.dart';
+
 import 'package:news_app_clean_architecture/features/daily_news/data/data_sources/local/app_database.dart';
 
 
@@ -29,7 +33,16 @@ final sl = GetIt.instance;
 
 Future<void> initializeDependencies() async {
 
-  final database = await $FloorAppDatabase.databaseBuilder('app_database.db').build();
+  final migration1to2 = Migration(1, 2, (database) async {
+    await database.execute('DROP TABLE IF EXISTS article');
+    await database.execute('CREATE TABLE IF NOT EXISTS `article` (`articleId` TEXT NOT NULL, `author` TEXT, `title` TEXT, `description` TEXT, `url` TEXT, `urlToImage` TEXT, `publishedAt` TEXT, `content` TEXT, `tokensEarned` REAL, PRIMARY KEY (`articleId`))');
+  });
+
+  final database = await $FloorAppDatabase
+      .databaseBuilder('app_database.db')
+      .addMigrations([migration1to2])
+      .build();
+
   sl.registerSingleton<AppDatabase>(database);
   
   // Firebase
@@ -43,7 +56,8 @@ Future<void> initializeDependencies() async {
 
   // Auth
   sl.registerSingleton<AuthRepository>(AuthRepositoryImpl(sl()));
-  sl.registerFactory<AuthCubit>(() => AuthCubit(sl()));
+  sl.registerLazySingleton<AuthCubit>(() => AuthCubit(sl()));
+
 
   // Dio (Local Backend / FastAPI)
   final backendDio = Dio(
@@ -78,9 +92,11 @@ Future<void> initializeDependencies() async {
 
   // Repositories
   sl.registerSingleton<StorageRepository>(StorageRepositoryImpl(sl()));
+  sl.registerSingleton<RewardRepository>(RewardRepositoryImpl(sl()));
   sl.registerSingleton<ArticleRepository>(
     ArticleRepositoryImpl(sl(), sl(), sl())
   );
+
   
   // UseCases
   sl.registerSingleton<GetArticleUseCase>(
@@ -103,6 +119,19 @@ Future<void> initializeDependencies() async {
     RemoveArticleUseCase(sl())
   );
 
+  sl.registerSingleton<ClaimRewardUseCase>(
+    ClaimRewardUseCase(sl())
+  );
+
+  sl.registerSingleton<GetBalanceUseCase>(
+    GetBalanceUseCase(sl())
+  );
+
+  sl.registerSingleton<UploadImageUseCase>(
+    UploadImageUseCase(sl())
+  );
+
+
   // Blocs
   sl.registerFactory<RemoteArticlesBloc>(
     ()=> RemoteArticlesBloc(sl(), sl())
@@ -117,6 +146,7 @@ Future<void> initializeDependencies() async {
   );
 
   sl.registerFactory<RewardCubit>(
-    () => RewardCubit(sl())
+    () => RewardCubit(sl(), sl())
   );
+
 }

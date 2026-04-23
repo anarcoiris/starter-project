@@ -9,7 +9,7 @@ from pymongo import MongoClient, UpdateOne
 # Ensure `/app` is importable when script runs as `python scripts/...`.
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 
-from app.config import settings
+from app.core.config import settings
 
 
 def main() -> None:

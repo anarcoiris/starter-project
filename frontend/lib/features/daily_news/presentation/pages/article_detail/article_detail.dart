@@ -11,8 +11,10 @@ import 'package:news_app_clean_architecture/features/daily_news/presentation/blo
 import 'package:news_app_clean_architecture/features/daily_news/presentation/bloc/article/local/local_article_event.dart';
 
 import 'package:news_app_clean_architecture/core/constants/constants.dart';
+import 'package:news_app_clean_architecture/features/auth/presentation/bloc/auth_cubit.dart';
 import 'package:news_app_clean_architecture/features/daily_news/presentation/bloc/reward/reward_cubit.dart';
 import 'package:news_app_clean_architecture/features/daily_news/presentation/bloc/reward/reward_state.dart';
+
 
 class ArticleDetailsView extends HookWidget {
   final ArticleEntity? article;
@@ -66,7 +68,15 @@ class ArticleDetailsView extends HookWidget {
   }
 
   void _claimReward(BuildContext context, double duration) {
-    context.read<RewardCubit>().claimReward(kAlphaTesterId, article?.url ?? '', duration);
+    // Get real userId from AuthCubit
+    final authState = context.read<AuthCubit>().state;
+    String userId = 'anonymous';
+    if (authState is Authenticated) {
+      userId = authState.user.uid;
+    }
+
+    context.read<RewardCubit>().claimReward(userId, article?.url ?? '', duration);
+
   }
 
   PreferredSizeWidget _buildAppBar(BuildContext context) {

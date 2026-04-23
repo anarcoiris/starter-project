@@ -10,8 +10,9 @@ import 'package:news_app_clean_architecture/features/daily_news/presentation/blo
 import 'package:news_app_clean_architecture/features/daily_news/presentation/bloc/article/remote/remote_article_state.dart';
 import 'package:news_app_clean_architecture/features/auth/presentation/bloc/auth_cubit.dart';
 import 'package:news_app_clean_architecture/features/daily_news/domain/repository/article_repository.dart';
-import 'package:news_app_clean_architecture/features/daily_news/domain/repository/storage_repository.dart';
+import 'package:news_app_clean_architecture/features/daily_news/domain/usecases/upload_image.dart';
 import 'package:news_app_clean_architecture/injection_container.dart';
+
 class PublishArticlePage extends StatefulWidget {
   const PublishArticlePage({Key? key}) : super(key: key);
 
@@ -120,8 +121,11 @@ class _PublishArticlePageState extends State<PublishArticlePage> {
       String imageUrl = 'https://images.unsplash.com/photo-1504711432869-efd597cdd042?auto=format&fit=crop&q=80&w=1000'; // Default
       
       if (_selectedImage != null) {
-        // Real upload to Firebase Storage using segregated repository
-        imageUrl = await sl<StorageRepository>().uploadImage(_selectedImage!, authState.user.uid);
+        // Use UseCase instead of Repository directly [N-05]
+        imageUrl = await sl<UploadImageUseCase>().call(
+          image: _selectedImage!, 
+          userId: authState.user.uid
+        ) ?? imageUrl;
       }
 
       final article = ArticleEntity(
@@ -141,6 +145,7 @@ class _PublishArticlePageState extends State<PublishArticlePage> {
       );
     }
   }
+
 
   Widget _buildTitleInput() {
     return Container(

@@ -5,11 +5,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 // Elegant Imports (Barrels)
 import 'package:news_app_clean_architecture/core/core.dart';
+import 'package:news_app_clean_architecture/features/auth/presentation/bloc/auth_cubit.dart';
 import 'package:news_app_clean_architecture/features/daily_news/domain/daily_news_domain.dart';
 import 'package:news_app_clean_architecture/features/daily_news/presentation/daily_news_presentation.dart';
 import 'package:news_app_clean_architecture/injection_container.dart';
 
-import 'package:news_app_clean_architecture/features/daily_news/data/data_sources/remote/reward_api_service.dart';
+
 
 class DailyNews extends StatefulWidget {
   const DailyNews({Key? key}) : super(key: key);
@@ -34,13 +35,16 @@ class _DailyNewsState extends State<DailyNews> {
 
   void _fetchBalance() async {
     try {
-      final result = await sl<RewardApiService>().getBalance(kAlphaTesterId);
-
-      if (mounted) {
+      final authState = context.read<AuthCubit>().state;
+      if (authState is! Authenticated) return;
+      
+      final result = await sl<GetBalanceUseCase>().call(params: authState.user.uid);
+      if (mounted && result is DataSuccess) {
         setState(() {
-          _balance = (result['balance'] as num).toDouble();
+          _balance = result.data!;
         });
       }
+
     } catch (e) {
       debugPrint('Error fetching balance: $e');
     }

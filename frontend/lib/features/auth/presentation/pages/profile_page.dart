@@ -1,11 +1,13 @@
 import 'dart:ui';
-import 'package:cloud_firestore/cloud_firestore.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:news_app_clean_architecture/core/core.dart';
 import 'package:news_app_clean_architecture/features/auth/presentation/bloc/auth_cubit.dart';
 import 'package:news_app_clean_architecture/core/constants/app_colors.dart';
 import 'package:news_app_clean_architecture/core/constants/constants.dart';
-import 'package:news_app_clean_architecture/features/daily_news/data/data_sources/remote/reward_api_service.dart';
+
+import 'package:news_app_clean_architecture/features/daily_news/domain/daily_news_domain.dart';
 import 'package:news_app_clean_architecture/injection_container.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -28,10 +30,13 @@ class _ProfilePageState extends State<ProfilePage> {
 
   void _fetchBalance() async {
     try {
-      final result = await sl<RewardApiService>().getBalance(kAlphaTesterId);
-      if (mounted) {
+      final authState = context.read<AuthCubit>().state;
+      if (authState is! Authenticated) return;
+
+      final result = await sl<GetBalanceUseCase>().call(params: authState.user.uid);
+      if (mounted && result is DataSuccess) {
         setState(() {
-          _balance = (result['balance'] as num).toDouble();
+          _balance = result.data!;
         });
       }
     } catch (e) {
@@ -169,39 +174,32 @@ class _ProfilePageState extends State<ProfilePage> {
                         onPressed: () {
                           if (_isEditing) {
                             context.read<AuthCubit>().updateBio(_bioController.text);
+                          } else {
+                            _bioController.text = user.bio ?? '';
                           }
                           setState(() => _isEditing = !_isEditing);
                         },
+
                       )
                     ],
                   ),
                   const SizedBox(height: 10),
-                  StreamBuilder<DocumentSnapshot>(
-                    stream: FirebaseFirestore.instance.collection('users').doc(user.uid).snapshots(),
-                    builder: (context, snapshot) {
-                      String bio = 'Sin biografía registrada.';
-                      if (snapshot.hasData && snapshot.data!.exists) {
-                        bio = snapshot.data!.get('bio') ?? bio;
-                        if (!_isEditing) _bioController.text = bio;
-                      }
+                  _isEditing 
+                    ? TextField(
+                        controller: _bioController,
+                        style: const TextStyle(color: Colors.white, fontSize: 14),
+                        maxLines: 3,
+                        decoration: InputDecoration(
+                          filled: true,
+                          fillColor: Colors.white.withOpacity(0.05),
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
+                        ),
+                      )
+                    : Text(
+                        user.bio ?? 'Sin biografía registrada.',
+                        style: const TextStyle(color: Colors.white, fontSize: 14, height: 1.5),
+                      ),
 
-                      return _isEditing 
-                        ? TextField(
-                            controller: _bioController,
-                            style: const TextStyle(color: Colors.white, fontSize: 14),
-                            maxLines: 3,
-                            decoration: InputDecoration(
-                              filled: true,
-                              fillColor: Colors.white.withOpacity(0.05),
-                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
-                            ),
-                          )
-                        : Text(
-                            bio,
-                            style: const TextStyle(color: Colors.white, fontSize: 14, height: 1.5),
-                          );
-                    },
-                  ),
                 ],
               ),
             ),

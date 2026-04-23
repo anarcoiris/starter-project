@@ -48,10 +48,16 @@ app = FastAPI(
     openapi_url="/api/openapi.json"
 )
 
-# Enable CORS for professional interoperability
+# Enable CORS with restricted origins
+allowed_origins = [
+    "https://uncovernews.ddns.net",
+    "http://localhost:3000",
+    "http://localhost:8000",
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=allowed_origins if not settings.debug_mode else ["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -77,9 +83,19 @@ api_router.include_router(articles.router, prefix="/articles", tags=["Articles"]
 api_router.include_router(ollama.router, prefix="/ollama", tags=["Ollama"])
 api_router.include_router(ingest.router, prefix="/ingest", tags=["Ingestion"])
 api_router.include_router(rewards.router, prefix="/rewards", tags=["Rewards"])
-api_router.include_router(debug.router, prefix="/debug", tags=["Debug & Diagnostics"])
+
+# Only include debug endpoints in debug mode
+if settings.debug_mode:
+    logger.warning("DEBUG MODE ACTIVE: Exposing diagnostic endpoints.")
+    api_router.include_router(debug.router, prefix="/debug", tags=["Debug & Diagnostics"])
 
 app.include_router(api_router)
+
+# --- Metrics Instrumentation ---
+from prometheus_fastapi_instrumentator import Instrumentator
+Instrumentator().instrument(app).expose(app, endpoint="/metrics", tags=["System"])
+
+
 
 @app.get("/health")
 async def health():

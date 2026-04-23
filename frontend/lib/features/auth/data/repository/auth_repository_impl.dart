@@ -16,8 +16,28 @@ class AuthRepositoryImpl implements AuthRepository {
   UserEntity? get currentUser => _mapFirebaseUser(_firebaseAuth.currentUser);
 
   @override
+  Stream<UserEntity?> getUserProfile(String uid) {
+    return FirebaseFirestore.instance.collection('users').doc(uid).snapshots().map((snapshot) {
+      final user = _firebaseAuth.currentUser;
+      if (user == null) return null;
+      
+      final data = snapshot.data();
+      return UserEntity(
+        uid: user.uid,
+        email: user.email,
+        displayName: user.displayName,
+        photoUrl: user.photoURL,
+        bio: data?['bio'],
+        reputationScore: (data?['reputation'] as num?)?.toInt() ?? 0,
+        isVerified: data?['isVerified'] ?? false,
+      );
+    });
+  }
+
+  @override
   Future<UserEntity?> login({required String email, required String password}) async {
     final credential = await _firebaseAuth.signInWithEmailAndPassword(
+
       email: email,
       password: password,
     );
