@@ -10,6 +10,8 @@ class ArticleEntity extends Equatable{
   final String ? publishedAt;
   final String ? content;
   final double ? tokensEarned;
+  final String ? source;
+  final String ? pdfPath;
 
   const ArticleEntity({
     this.articleId,
@@ -21,6 +23,8 @@ class ArticleEntity extends Equatable{
     this.publishedAt,
     this.content,
     this.tokensEarned,
+    this.source,
+    this.pdfPath,
   });
 
 
@@ -36,6 +40,8 @@ class ArticleEntity extends Equatable{
       publishedAt,
       content,
       tokensEarned,
+      source,
+      pdfPath,
     ];
   }
 }

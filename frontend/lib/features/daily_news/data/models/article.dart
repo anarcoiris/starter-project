@@ -14,6 +14,8 @@ class ArticleModel extends ArticleEntity {
     String? publishedAt,
     String? content,
     double? tokensEarned,
+    String? source,
+    String? pdfPath,
   }) : super(
           articleId: articleId,
           author: author,
@@ -24,6 +26,8 @@ class ArticleModel extends ArticleEntity {
           publishedAt: publishedAt,
           content: content,
           tokensEarned: tokensEarned,
+          source: source,
+          pdfPath: pdfPath,
         );
 
 
@@ -49,6 +53,8 @@ class ArticleModel extends ArticleEntity {
       publishedAt: map['publishedAt'] ?? "",
       content: map['content'] ?? "",
       tokensEarned: (map['tokensEarned'] as num?)?.toDouble() ?? 0.0,
+      source: map['source'] ?? "SYMMETRY NEWS",
+      pdfPath: map['pdfPath'],
     );
   }
 
@@ -64,6 +70,8 @@ class ArticleModel extends ArticleEntity {
         publishedAt: publishedAt,
         content: content,
         tokensEarned: tokensEarned,
+        source: source,
+        pdfPath: pdfPath,
       );
 
 
@@ -77,7 +85,9 @@ class ArticleModel extends ArticleEntity {
         urlToImage: entity.urlToImage,
         publishedAt: entity.publishedAt,
         content: entity.content,
-        tokensEarned: entity.tokensEarned);
+        tokensEarned: entity.tokensEarned,
+        source: entity.source,
+        pdfPath: entity.pdfPath);
   }
 
 

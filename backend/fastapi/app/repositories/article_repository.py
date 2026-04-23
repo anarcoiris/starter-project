@@ -73,4 +73,9 @@ class ArticleRepository:
             }
         )
 
-
+    async def update_pdf_path(self, article_id: str, pdf_path: str):
+        """Update the pdfPath field for a specific article."""
+        await self.collection.update_one(
+            {"articleId": article_id},
+            {"$set": {"pdfPath": pdf_path}}
+        )

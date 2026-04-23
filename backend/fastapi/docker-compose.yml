@@ -69,6 +69,7 @@ services:
       - ./Caddyfile:/etc/caddy/Caddyfile
       - caddy_data:/data
       - caddy_config:/config
+      - ./exports/pdfs:/app/exports/pdfs:ro
     depends_on:
       - api
 

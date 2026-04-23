@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 // Elegant Imports (Barrels)
 import 'package:news_app_clean_architecture/core/core.dart';
@@ -25,6 +26,7 @@ class _DailyNewsState extends State<DailyNews> {
   Timer? _visibilityTimer;
   String _assistantMessage = 'Hola, soy tu asistente Owl. Toca aquí para analizar noticias.';
   double _balance = 0.0;
+  bool _isNewspaperMode = false;
 
   @override
   void initState() {
@@ -122,6 +124,24 @@ class _DailyNewsState extends State<DailyNews> {
       actions: [
         _buildBalanceWidget(),
         IconButton(
+          onPressed: () {
+            setState(() {
+              _isNewspaperMode = !_isNewspaperMode;
+            });
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(_isNewspaperMode ? 'Modo Anarcotimes Activado' : 'Volviendo al Feed Normal'),
+                backgroundColor: AppColors.primary,
+                duration: const Duration(seconds: 1),
+              ),
+            );
+          },
+          icon: Icon(
+            _isNewspaperMode ? Icons.newspaper : Icons.newspaper_outlined,
+            color: _isNewspaperMode ? AppColors.primary : Colors.white,
+          ),
+        ),
+        IconButton(
           onPressed: () => Navigator.pushNamed(context, '/Search'),
           icon: const Icon(Icons.search, color: AppColors.primary),
         ),
@@ -187,12 +207,36 @@ class _DailyNewsState extends State<DailyNews> {
                 child: ListView.builder(
                   controller: _scrollController,
                   padding: const EdgeInsets.only(bottom: 100),
-                  itemCount: (state.articles?.length ?? 0) + 1,
+                  itemCount: (_isNewspaperMode 
+                    ? state.articles!.where((a) => a.pdfPath != null).length 
+                    : (state.articles?.length ?? 0)) + 1,
                   itemBuilder: (context, index) {
-                    if (index == 0) {
-                      return const CtaBanner();
+                    final articles = _isNewspaperMode 
+                      ? state.articles!.where((a) => a.pdfPath != null).toList()
+                      : state.articles!;
+
+                    if (_isNewspaperMode && articles.isEmpty) {
+                      return const Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.print_disabled_outlined, size: 60, color: AppColors.textMuted),
+                            SizedBox(height: 16),
+                            Text('Aún no hay ediciones impresas listas.', style: TextStyle(color: AppColors.textMuted)),
+                          ],
+                        ),
+                      );
                     }
-                    final article = state.articles![index - 1];
+
+                    if (index == 0) {
+                      return _isNewspaperMode 
+                        ? const Padding(
+                            padding: EdgeInsets.all(16.0),
+                            child: Text('EDICIONES IMPRESAS (ANARCOTIMES)', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, letterSpacing: 2)),
+                          )
+                        : const CtaBanner();
+                    }
+                    final article = articles[index - 1];
                     return ArticleWidget(
                       article: article,
                       onArticlePressed: (article) => _onArticlePressed(context, article),
@@ -254,7 +298,20 @@ class _DailyNewsState extends State<DailyNews> {
     );
   }
 
-  void _onArticlePressed(BuildContext context, ArticleEntity article) {
+  void _onArticlePressed(BuildContext context, ArticleEntity article) async {
+    if (_isNewspaperMode && article.pdfPath != null) {
+      // OPEN PDF
+      final Uri url = Uri.parse(article.pdfPath!);
+      if (await canLaunchUrl(url)) {
+        await launchUrl(url, mode: LaunchMode.externalApplication);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No se pudo abrir el PDF.'))
+        );
+      }
+      return;
+    }
+    
     sl<AnalyticsRepository>().trackArticleView(article);
     Navigator.pushNamed(context, '/ArticleDetails', arguments: article);
   }

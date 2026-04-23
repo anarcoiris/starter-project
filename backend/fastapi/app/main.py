@@ -17,6 +17,9 @@ from app.core.config import settings
 from app.mongo_schema import initialize_mongo_schema
 from app.api.v1.endpoints import articles, ollama, ingest, rewards, debug, users
 
+from aiokafka import AIOKafkaProducer
+import json
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("Starting up Symmetry Nexus Systems...")
@@ -28,14 +31,22 @@ async def lifespan(app: FastAPI):
     await app.state.motor_client.admin.command("ping")
     logger.info("MongoDB Connection Verified.")
     
+    # Initialize Kafka Producer
+    app.state.producer = AIOKafkaProducer(
+        bootstrap_servers=settings.kafka_bootstrap_servers
+    )
+    await app.state.producer.start()
+    logger.info("Kafka Producer Initialized.")
+    
     # Initialize schema/indexes
     await initialize_mongo_schema(app.state.db)
     logger.info("Schema Initialization Complete.")
     
     yield
     
-    # Shutdown: Close connection
+    # Shutdown: Close connections
     logger.info("Shutting down Nexus Systems...")
+    await app.state.producer.stop()
     app.state.motor_client.close()
 
 from fastapi.middleware.cors import CORSMiddleware

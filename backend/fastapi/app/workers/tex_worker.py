@@ -3,6 +3,7 @@ import json
 import logging
 import os
 import subprocess
+import re
 from aiokafka import AIOKafkaConsumer, AIOKafkaProducer
 from app.services.tex_service import TexService
 from app.core.config import settings
@@ -11,13 +12,23 @@ import httpx
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("TexWorker")
 
+from app.repositories.article_repository import ArticleRepository
+from motor.motor_asyncio import AsyncIOMotorClient
+
 class TexWorker:
     def __init__(self):
         self.tex_service = TexService()
         self.consumer = None
         self.producer = None
+        self.repo = None
+        self.db_client = None
 
     async def start(self):
+        # Initialize DB
+        self.db_client = AsyncIOMotorClient(settings.mongodb_url)
+        db = self.db_client[settings.mongodb_db_name]
+        self.repo = ArticleRepository(db)
+
         self.consumer = AIOKafkaConsumer(
             'tex_rendering_queue',
             bootstrap_servers=settings.kafka_bootstrap_servers,
@@ -40,6 +51,8 @@ class TexWorker:
         finally:
             await self.consumer.stop()
             await self.producer.stop()
+            if self.db_client:
+                self.db_client.close()
 
     async def process_task(self, article: dict):
         try:
@@ -57,26 +70,58 @@ class TexWorker:
             
             if pdf_path:
                 logger.info(f"PDF successfully generated: {pdf_path}")
-                # 4. TODO: Upload to Firebase Storage and update article in DB
-                # For now, we log the success
+                # 4. Update article in DB with the PUBLIC PDF URL
+                # The Caddy server exposes /app/exports/pdfs at /pdfs/
+                public_url = f"https://uncovernews.ddns.net/pdfs/{article_id}/article.pdf"
+                await self.repo.update_pdf_path(article_id, public_url)
+                logger.info(f"Database updated for article {article_id} with public URL.")
         except Exception as e:
             logger.error(f"Failed to process rendering task: {e}")
 
     async def get_ai_snippet(self, article: dict) -> str:
         prompt = self.tex_service.get_latex_prompt(article)
         
-        async with httpx.AsyncClient(timeout=120.0) as client:
+        async with httpx.AsyncClient(timeout=300.0) as client:
             try:
                 response = await client.post(
                     f"{settings.ollama_host}/api/generate",
                     json={
-                        "model": "llama3", # Or the model being used
+                        "model": "llama3",
                         "prompt": prompt,
                         "stream": False
                     }
                 )
                 if response.status_code == 200:
-                    return response.json().get('response', '').strip()
+                    raw_content = response.json().get('response', '').strip()
+                    
+                    # Clean the response: Extract only content inside backticks if they exist
+                    if "```" in raw_content:
+                        # Extract content between the first and last triple backticks
+                        match = re.search(r'```(?:latex)?\n?(.*?)\n?```', raw_content, re.DOTALL)
+                        if match:
+                            clean_content = match.group(1).strip()
+                        else:
+                            clean_content = raw_content
+                    else:
+                        clean_content = raw_content
+                        
+                    # 2. Aggressive cleanup of common LLM mistakes
+                    # Remove any duplicate class/preamble/document tags
+                    forbidden = [
+                        r"\\documentclass.*", 
+                        r"\\usepackage.*", 
+                        r"\\begin\{document\}", 
+                        r"\\end\{document\}",
+                        r"\\begin\{multicols\}.*",
+                        r"\\end\{multicols\}"
+                    ]
+                    for pattern in forbidden:
+                        clean_content = re.sub(pattern, "", clean_content)
+                        
+                    # Fix image reference
+                    clean_content = clean_content.replace("{image.jpg}", "{atom.jpg}")
+                    
+                    return clean_content.strip()
                 else:
                     logger.error(f"Ollama error: {response.text}")
             except Exception as e:
@@ -97,12 +142,13 @@ class TexWorker:
             f.write(tex_content)
             
         # Copy the .sty and modification files to the work dir
-        # In prod, these should be in a shared volume or baked into the image
-        template_src = "app/services/article_templates/newspaper"
+        template_src = "/app/app/services/article_templates/newspaper"
         for f_name in ["newspaper.sty", "newspaper-mod.sty", "atom.jpg"]:
              src_path = os.path.join(template_src, f_name)
              if os.path.exists(src_path):
                  subprocess.run(["cp", src_path, work_dir])
+             else:
+                 logger.warning(f"Template asset missing: {src_path}")
 
         try:
             # We use tectonic because it's self-contained and downloads missing packages

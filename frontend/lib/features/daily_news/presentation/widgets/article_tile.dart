@@ -98,6 +98,37 @@ class ArticleWidget extends StatelessWidget {
         ),
         Positioned(
           top: 12,
+          left: 12,
+          child: article!.pdfPath != null ? ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: BackdropFilter(
+              filter: ui.ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.7),
+                  borderRadius: BorderRadius.circular(10),
+                  boxShadow: [
+                    BoxShadow(color: AppColors.primary.withValues(alpha: 0.3), blurRadius: 8)
+                  ]
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.newspaper, size: 14, color: Colors.black),
+                    SizedBox(width: 6),
+                    Text(
+                      'ANARCOTIMES',
+                      style: TextStyle(color: Colors.black, fontSize: 10, fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ) : const SizedBox(),
+        ),
+        Positioned(
+          top: 12,
           right: 12,
           child: ClipRRect(
             borderRadius: BorderRadius.circular(10),
@@ -143,15 +174,20 @@ class ArticleWidget extends StatelessWidget {
                   borderRadius: BorderRadius.circular(4),
                   border: Border.all(color: AppColors.primary.withValues(alpha: 0.5))
                 ),
-                child: const Text(
-                  'SYMMETRY NEWS',
-                  style: TextStyle(
+                child: Text(
+                  article!.source?.toUpperCase() ?? 'SYMMETRY NEWS',
+                  style: const TextStyle(
                     color: AppColors.primary,
                     fontSize: 8,
                     fontWeight: FontWeight.bold,
                     letterSpacing: 1,
                   ),
                 ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                _formatDate(article!.publishedAt),
+                style: const TextStyle(color: AppColors.textMuted, fontSize: 10),
               ),
               const Spacer(),
               if (isRemovable!)
@@ -233,6 +269,25 @@ class ArticleWidget extends StatelessWidget {
   void _onRemove() {
     if (onRemove != null) {
       onRemove!(article!);
+    }
+  }
+
+  String _formatDate(String? dateStr) {
+    if (dateStr == null) return '';
+    try {
+      final date = DateTime.parse(dateStr);
+      final now = DateTime.now();
+      final difference = now.difference(date);
+
+      if (difference.inMinutes < 60) {
+        return 'Hace ${difference.inMinutes}m';
+      } else if (difference.inHours < 24) {
+        return 'Hace ${difference.inHours}h';
+      } else {
+        return '${date.day}/${date.month}/${date.year}';
+      }
+    } catch (e) {
+      return dateStr.split('T')[0];
     }
   }
 }

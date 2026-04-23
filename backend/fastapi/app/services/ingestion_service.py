@@ -5,6 +5,8 @@ from bs4 import BeautifulSoup
 from datetime import datetime
 from typing import List, Optional
 import hashlib
+import json
+from aiokafka import AIOKafkaProducer
 from app.repositories.article_repository import ArticleRepository
 from app.repositories.cache_repository import CacheRepository
 from app.models.article import Article, ArticleCreate
@@ -13,9 +15,10 @@ from app.core.config import settings
 logger = logging.getLogger(__name__)
 
 class IngestionService:
-    def __init__(self, repository: ArticleRepository, cache: CacheRepository):
+    def __init__(self, repository: ArticleRepository, cache: CacheRepository, producer: Optional[AIOKafkaProducer] = None):
         self.repository = repository
         self.cache = cache
+        self.producer = producer
         self.sources = [
             {"name": "TechCrunch", "url": "https://techcrunch.com/feed/"},
             {"name": "Google News Tech", "url": "https://news.google.com/rss/search?q=technology&hl=en-US&gl=US&ceid=US:en"},
@@ -38,6 +41,7 @@ class IngestionService:
     async def _ingest_source(self, client: httpx.AsyncClient, source: dict) -> int:
         response = await client.get(source["url"])
         feed = feedparser.parse(response.text)
+        logger.info(f"Source {source['name']} returned {len(feed.entries)} entries.")
         
         new_articles = 0
         # Limit to 5 per source for demo/performance
@@ -53,6 +57,24 @@ class IngestionService:
             article_data = await self._process_entry(client, entry, source["name"])
             if article_data:
                 await self.repository.create(article_data)
+                
+                # TRIGGER PDF GENERATION
+                if self.producer:
+                    try:
+                        # We send the dictionary representation of the article
+                        # Article model has a convenient .dict() or .model_dump()
+                        message = article_data.model_dump()
+                        # Convert datetime to string for JSON serialization
+                        message['publishedAt'] = message['publishedAt'].isoformat()
+                        
+                        await self.producer.send_and_wait(
+                            "tex_rendering_queue",
+                            json.dumps(message).encode("utf-8")
+                        )
+                        logger.info(f"PDF rendering task queued for: {article_data.title}")
+                    except Exception as e:
+                        logger.error(f"Failed to queue PDF task: {e}")
+
                 new_articles += 1
                 
         return new_articles
@@ -118,7 +140,7 @@ class IngestionService:
             publishedAt=published_at,
             content=content,
             source=source_name,
-            category="Technology"
+            category="technology"
         )
 
     async def _refactor_with_ai(self, client: httpx.AsyncClient, title: str, description: str) -> dict:
@@ -135,9 +157,12 @@ class IngestionService:
         logger.info(f"Cache MISS for AI refactor: {title[:30]}...")
         
         prompt = f"""
-        Eres un periodista de élite de Symmetry. Reescribe el siguiente título y descripción de noticia para que sea técnico, elegante y con un toque futurista. 
-        Mantén la veracidad pero mejora el impacto. 
-        Responde ÚNICAMENTE en formato JSON con los campos 'title' y 'description'.
+        Eres un periodista de tecnología de alto nivel. Reescribe el siguiente título y descripción EN ESPAÑOL para que suenen más profesionales, concisos y elegantes, manteniendo un tono de innovación.
+        IMPORTANTE: 
+        1. Mantén estrictamente la veracidad de la noticia.
+        2. NO añadas nombres de empresas o eventos que no estén en el original (como 'Symmetry').
+        3. El resultado debe estar íntegramente en ESPAÑOL.
+        4. Responde ÚNICAMENTE en formato JSON con los campos 'title' y 'description'.
         
         NOTICIA ORIGINAL:
         Título: {title}

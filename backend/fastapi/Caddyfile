@@ -1,3 +1,12 @@
 uncovernews.ddns.net {
-	reverse_proxy symmetry_api:8000
+	# Serve PDFs
+	handle_path /pdfs/* {
+		root * /app/exports/pdfs
+		file_server
+	}
+
+	# API Proxy
+	handle {
+		reverse_proxy symmetry_api:8000
+	}
 }

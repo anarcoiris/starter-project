@@ -36,28 +36,29 @@ class TexService:
         """
         title = self.escape_latex(article.get('title', ''))
         author = self.escape_latex(article.get('author', 'Agente Symmetry'))
-        content = article.get('content', '') # We want AI to format this
+        content = article.get('content', '')
         
-        # In a real scenario, we would download the image or use its local path
-        image_name = "cover_image.jpg" 
-
         prompt = f"""
 Eres un maquetador experto en LaTeX para el periódico "Anarcotimes". 
-Tu tarea es convertir el contenido de una noticia en código LaTeX compatible con el paquete 'newspaper'.
+Tu tarea es convertir el contenido de una noticia (que puede venir en Markdown) en código LaTeX puro y elegante.
 
-REGLAS ESTRICTAS:
-1. Usa solo los comandos: \\byline{{TITULO}}{{AUTOR}}, \\begin{{window}}[líneas, l/r, \\includegraphics{{...}}, CAPTION], y \\closearticle.
-2. Si hay una imagen, colócala al principio usando el entorno 'window'.
-3. No incluyas preámbulo, \\begin{{document}} ni \\end{{document}}. Solo el fragmento de la noticia.
-4. Asegúrate de que el texto fluya bien en 3 columnas.
-5. Escapa caracteres especiales de LaTeX si los encuentras.
+REGLAS DE ORO:
+1. Devuelve ÚNICAMENTE el código LaTeX. Sin explicaciones, sin saludos, sin backticks.
+2. CONVIERTE la sintaxis:
+   - Los títulos '# Titulo' o '## Subtitulo' deben ser \\headline{{...}} o simplemente texto en negrita \\textbf{{...}}. NO uses #.
+   - Las negritas **texto** pasan a \\textbf{{texto}}.
+   - El código ```...``` pasa a \\texttt{{...}}.
+3. Usa EXACTAMENTE esta estructura para la imagen (entorno window de picinpar):
+   \\begin{{window}}[2, l, \\includegraphics[width=1.0in]{{atom.jpg}}, {{\\centerline{{LEYENDA}}}}]
+   TEXTO_DEL_ARTICULO
+   \\end{{window}}
+4. Empieza con: \\byline{{{title}}}{{{author}}} y termina con: \\closearticle
+5. IMPORTANTE: NO incluyas \\documentclass, \\usepackage ni \\begin{{document}}.
 
-NOTICIA A CONVERTIR:
-Título: {title}
-Autor: {author}
-Contenido: {content}
+CONTENIDO A CONVERTIR:
+{content}
 
-RESULTADO EN LATEX:
+RESULTADO (CÓDIGO LATEX PURO):
 """
         return prompt
 

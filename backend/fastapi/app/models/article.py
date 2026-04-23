@@ -33,6 +33,7 @@ class Article(ArticleBase):
     fraudScore: float = 0.0
     rewardEpoch: Optional[int] = 0
     verifiedImpressionCount: int = 0
+    pdfPath: Optional[str] = None
 
 
     class Config:

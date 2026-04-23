@@ -64,3 +64,6 @@ out/
 .pytest_cache/
 .coverage
 htmlcov/
+
+# Exports and Generated Files
+backend/fastapi/exports/

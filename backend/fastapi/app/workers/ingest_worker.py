@@ -12,14 +12,22 @@ logger = logging.getLogger("IngestWorker")
 async def run_periodic_ingestion():
     logger.info("Starting Periodic Ingest Worker...")
     
+    from aiokafka import AIOKafkaProducer
+    
     # Initialize DB connection
     client = AsyncIOMotorClient(settings.mongodb_url)
     db = client[settings.mongodb_db_name]
     
+    # Initialize Kafka Producer
+    producer = AIOKafkaProducer(
+        bootstrap_servers=settings.kafka_bootstrap_servers
+    )
+    await producer.start()
+    
     # Initialize Service
     repo = ArticleRepository(db)
     cache = CacheRepository(db)
-    service = IngestionService(repo, cache)
+    service = IngestionService(repo, cache, producer=producer)
     
     while True:
         try:

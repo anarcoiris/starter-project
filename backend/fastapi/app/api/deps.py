@@ -25,4 +25,8 @@ def get_article_service(request: Request) -> ArticleService:
     return ArticleService(get_article_repository(request))
 
 def get_ingestion_service(request: Request) -> IngestionService:
-    return IngestionService(get_article_repository(request), get_cache_repository(request))
+    return IngestionService(
+        get_article_repository(request), 
+        get_cache_repository(request),
+        producer=request.app.state.producer
+    )
