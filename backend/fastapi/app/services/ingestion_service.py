@@ -44,8 +44,8 @@ class IngestionService:
         logger.info(f"Source {source['name']} returned {len(feed.entries)} entries.")
         
         new_articles = 0
-        # Limit to 5 per source for demo/performance
-        for entry in feed.entries[:8]:
+        # Limit to 25 per source for richer content
+        for entry in feed.entries[:25]:
             article_id = entry.get("id", entry.link)
             
             # Check if exists

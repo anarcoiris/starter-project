@@ -4,6 +4,7 @@ import logging
 import os
 import subprocess
 import re
+import hashlib
 from aiokafka import AIOKafkaConsumer, AIOKafkaProducer
 from app.services.tex_service import TexService
 from app.core.config import settings
@@ -66,13 +67,15 @@ class TexWorker:
             
             # 3. Compile (Using tectonic for speed and auto-package management)
             article_id = article.get('articleId', 'temp')
-            pdf_path = await self.compile_tex(full_tex, article_id)
+            # Use a safe folder name (hash the ID to avoid filesystem limits)
+            safe_id = hashlib.md5(article_id.encode()).hexdigest()
+            pdf_path = await self.compile_tex(full_tex, safe_id)
             
             if pdf_path:
-                logger.info(f"PDF successfully generated: {pdf_path}")
+                logger.info(f"PDF successfully generated for {article_id} in {safe_id}")
                 # 4. Update article in DB with the PUBLIC PDF URL
                 # The Caddy server exposes /app/exports/pdfs at /pdfs/
-                public_url = f"https://uncovernews.ddns.net/pdfs/{article_id}/article.pdf"
+                public_url = f"https://uncovernews.ddns.net/pdfs/{safe_id}/article.pdf"
                 await self.repo.update_pdf_path(article_id, public_url)
                 logger.info(f"Database updated for article {article_id} with public URL.")
         except Exception as e:

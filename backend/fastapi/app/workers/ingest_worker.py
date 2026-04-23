@@ -37,9 +37,9 @@ async def run_periodic_ingestion():
         except Exception as e:
             logger.error(f"Error during scheduled ingestion: {e}")
             
-        # Wait for 30 minutes
-        logger.info("Waiting 30 minutes for next cycle...")
-        await asyncio.sleep(1800)
+        # Wait for 5 minutes
+        logger.info("Waiting 5 minutes for next cycle...")
+        await asyncio.sleep(300)
 
 if __name__ == "__main__":
     asyncio.run(run_periodic_ingestion())
