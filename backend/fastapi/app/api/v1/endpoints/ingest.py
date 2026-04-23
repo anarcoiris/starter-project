@@ -1,16 +1,8 @@
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends
 from app.services.ingestion_service import IngestionService
-from app.repositories.article_repository import ArticleRepository
-from app.repositories.cache_repository import CacheRepository
+from app.api.deps import get_ingestion_service
 
 router = APIRouter()
-
-def get_ingestion_service(request: Request) -> IngestionService:
-    db = request.app.state.db
-    repository = ArticleRepository(db)
-    cache_repo = CacheRepository(db)
-    return IngestionService(repository, cache_repo)
-
 
 @router.post("/trigger")
 async def trigger_ingestion(service: IngestionService = Depends(get_ingestion_service)):

@@ -1,8 +1,10 @@
 import 'dart:io';
+import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:ionicons/ionicons.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:image_cropper/image_cropper.dart';
 import 'package:news_app_clean_architecture/core/constants/app_colors.dart';
 import 'package:news_app_clean_architecture/features/daily_news/domain/entities/article.dart';
 import 'package:news_app_clean_architecture/features/daily_news/presentation/bloc/article/remote/remote_article_bloc.dart';
@@ -232,14 +234,46 @@ class _PublishArticlePageState extends State<PublishArticlePage> {
     try {
       final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
       if (image != null) {
-        setState(() {
-          _selectedImage = File(image.path);
-        });
+        await _cropImage(image.path);
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Error al seleccionar imagen')),
       );
+    }
+  }
+
+  Future<void> _cropImage(String filePath) async {
+    try {
+      final croppedFile = await ImageCropper().cropImage(
+        sourcePath: filePath,
+        aspectRatio: const CropAspectRatio(ratioX: 16, ratioY: 9),
+        compressQuality: 90,
+        maxWidth: 1080,
+        maxHeight: 607,
+        uiSettings: [
+          AndroidUiSettings(
+            toolbarTitle: 'Ajustar Portada',
+            toolbarColor: AppColors.surface,
+            toolbarWidgetColor: AppColors.primary,
+            initAspectRatio: CropAspectRatioPreset.ratio16x9,
+            lockAspectRatio: true,
+            activeControlsWidgetColor: AppColors.primary,
+          ),
+          IOSUiSettings(
+            title: 'Ajustar Portada',
+            aspectRatioLockEnabled: true,
+          ),
+        ],
+      );
+
+      if (croppedFile != null) {
+        setState(() {
+          _selectedImage = File(croppedFile.path);
+        });
+      }
+    } catch (e) {
+      developer.log('Error al recortar imagen: $e', name: 'SymmetryUI');
     }
   }
 

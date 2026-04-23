@@ -1,6 +1,9 @@
 from typing import List
 from app.repositories.article_repository import ArticleRepository
-from app.models.article import Article, ArticleCreate
+from app.models.article import Article, ArticleCreate, ArticleRead
+from app.core.config import settings
+import json
+from aiokafka import AIOKafkaProducer
 
 class ArticleService:
     def __init__(self, repository: ArticleRepository):
@@ -35,4 +38,34 @@ class ArticleService:
         
         full_article = Article(**article_dict)
         return await self.repository.create(full_article)
+
+    async def register_read_impact(self, article_id: str, event: ArticleRead):
+        # 1. Update counters in DB
+        await self.repository.increment_read_metrics(article_id, event.readTimeSeconds)
+        
+        # 2. TODO: Publish to Redpanda for real-time fraud analysis
+        # producer.send('read_events', event.json())
+        return True
+
+    async def trigger_pdf_generation(self, article_id: str):
+        # 1. Get article from DB
+        article = await self.repository.get_by_id(article_id)
+        if not article:
+            return None
+        
+        # 2. Publish task to Redpanda
+        producer = AIOKafkaProducer(bootstrap_servers=settings.kafka_bootstrap_servers)
+        await producer.start()
+        try:
+            task_data = article.model_dump()
+            # Ensure publishedAt is string for JSON
+            if task_data.get('publishedAt'):
+                task_data['publishedAt'] = str(task_data['publishedAt'])
+                
+            await producer.send_and_wait("tex_rendering_queue", json.dumps(task_data).encode('utf-8'))
+        finally:
+            await producer.stop()
+            
+        return True
+
 

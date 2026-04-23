@@ -15,7 +15,7 @@ logger = logging.getLogger("SymmetryAPI")
 
 from app.core.config import settings
 from app.mongo_schema import initialize_mongo_schema
-from app.api.v1.endpoints import articles, ollama, ingest, rewards, debug
+from app.api.v1.endpoints import articles, ollama, ingest, rewards, debug, users
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -83,6 +83,7 @@ api_router.include_router(articles.router, prefix="/articles", tags=["Articles"]
 api_router.include_router(ollama.router, prefix="/ollama", tags=["Ollama"])
 api_router.include_router(ingest.router, prefix="/ingest", tags=["Ingestion"])
 api_router.include_router(rewards.router, prefix="/rewards", tags=["Rewards"])
+api_router.include_router(users.router, prefix="/users", tags=["Users"])
 
 # Only include debug endpoints in debug mode
 if settings.debug_mode:

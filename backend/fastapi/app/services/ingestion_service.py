@@ -7,7 +7,7 @@ from typing import List, Optional
 import hashlib
 from app.repositories.article_repository import ArticleRepository
 from app.repositories.cache_repository import CacheRepository
-from app.models.article import ArticleCreate
+from app.models.article import Article, ArticleCreate
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)
@@ -57,7 +57,7 @@ class IngestionService:
                 
         return new_articles
 
-    async def _process_entry(self, client: httpx.AsyncClient, entry, source_name: str) -> Optional[ArticleCreate]:
+    async def _process_entry(self, client: httpx.AsyncClient, entry, source_name: str) -> Optional[Article]:
         title = entry.title
         summary_html = entry.get("summary", "") or entry.get("description", "")
         soup = BeautifulSoup(summary_html, "html.parser")
@@ -108,7 +108,7 @@ class IngestionService:
         if entry.get("published_parsed"):
             published_at = datetime(*entry.published_parsed[:6])
 
-        return ArticleCreate(
+        return Article(
             articleId=entry.get("id", entry.link),
             author=f"AI Journalist ({source_name})",
             title=final_title,

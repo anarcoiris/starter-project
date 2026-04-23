@@ -40,10 +40,20 @@ class SymmetryStream(tweepy.StreamingClient):
 async def main():
     logger.info("Iniciando Twitter Worker...")
     
-    # 1. Iniciar Productor de Kafka
+    # 1. Iniciar Productor de Kafka con reintentos
     producer = AIOKafkaProducer(bootstrap_servers=KAFKA_SERVER)
-    await producer.start()
-    logger.info(f"Conectado a Redpanda en {KAFKA_SERVER}")
+    
+    retry_count = 0
+    while True:
+        try:
+            await producer.start()
+            logger.info(f"Conectado a Redpanda en {KAFKA_SERVER}")
+            break
+        except Exception as e:
+            retry_count += 1
+            logger.warning(f"Intento {retry_count} fallido para conectar a Redpanda: {e}. Reintentando en 5s...")
+            await asyncio.sleep(5)
+
 
     try:
         # 2. Configurar Stream de Twitter (V2)

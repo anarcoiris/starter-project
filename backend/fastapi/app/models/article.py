@@ -28,12 +28,19 @@ class Article(ArticleBase):
     views: int = 0
     readTime: int = 0
     tokensEarned: float = 0.0
-    expectedReadTime: int = 30 # Default estimation in seconds
-    qualityScore: float = 1.0
+    expectedReadTime: Optional[int] = 30
+    qualityScore: Optional[float] = 1.0
     fraudScore: float = 0.0
-    rewardEpoch: int = 0
+    rewardEpoch: Optional[int] = 0
     verifiedImpressionCount: int = 0
+
 
     class Config:
         from_attributes = True
+
+class ArticleRead(BaseModel):
+    userId: str
+    readTimeSeconds: int
+    readAt: datetime = Field(default_factory=datetime.now)
+
 
