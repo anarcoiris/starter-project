@@ -23,7 +23,8 @@ def get_cache_repository(request: Request) -> CacheRepository:
     return CacheRepository(get_db(request))
 
 def get_article_service(request: Request) -> ArticleService:
-    return ArticleService(get_article_repository(request))
+    producer = getattr(request.app.state, 'producer', None)
+    return ArticleService(get_article_repository(request), producer=producer)
 
 def get_ingestion_service(request: Request) -> IngestionService:
     return IngestionService(

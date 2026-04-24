@@ -2,9 +2,9 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
-ARG REQS_FILE=requirements.txt
-COPY ${REQS_FILE} ./requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
+ARG REQS_FILE=requirements/api.txt
+COPY requirements/ ./requirements/
+RUN pip install --no-cache-dir -r ${REQS_FILE}
 
 COPY app ./app
 COPY scripts ./scripts

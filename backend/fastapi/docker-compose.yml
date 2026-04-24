@@ -2,7 +2,6 @@ services:
   mongodb:
     image: mongo:7
     container_name: symmetry_mongodb
-    # Removed direct host port exposure for security: "just api" access requested.
     volumes:
       - symmetry_mongo_data:/data/db
     restart: unless-stopped
@@ -41,12 +40,12 @@ services:
           memory: 8G
     restart: unless-stopped
 
-
+  # ── Core API ──────────────────────────────────────────────────────────────
   api:
     build:
       context: .
       args:
-        REQS_FILE: requirements-api.txt
+        REQS_FILE: requirements/api.txt
     container_name: symmetry_api
     volumes:
       - .:/app
@@ -82,48 +81,23 @@ services:
     depends_on:
       - ollama
 
-  # --- Data Pipeline Workers ---
-  worker-twitter:
-    build: .
-    container_name: symmetry_worker_twitter
-    entrypoint: ["python", "app/workers/twitter_worker.py"]
-    env_file: .env
-    depends_on:
-      - redpanda
-
-  worker-analysis:
-    build: .
-    container_name: symmetry_worker_analysis
-    entrypoint: ["python", "app/workers/analysis_worker.py"]
-    env_file: .env
-    depends_on:
-      - redpanda
-      - ollama
-
-  worker-mongo:
-    build: .
-    container_name: symmetry_worker_mongo
-    entrypoint: ["python", "app/workers/mongo_sink.py"]
-    env_file: .env
-    restart: unless-stopped
-    depends_on:
-      - redpanda
-      - mongodb
-
+  # ── Active Workers (RSS + TeX) ────────────────────────────────────────────
   worker-ingest:
     build:
       context: .
       args:
-        REQS_FILE: requirements-ingest.txt
+        REQS_FILE: requirements/ingest.txt
     container_name: symmetry_worker_ingest
-    command: python app/workers/ingest_worker.py
+    command: python -m app.workers.ingest_worker
     environment:
       MONGODB_URL: mongodb://mongodb:27017
       MONGODB_DB_NAME: symmetry
       OLLAMA_HOST: http://ollama:11434
+      KAFKA_BOOTSTRAP_SERVERS: redpanda:9092
     depends_on:
       - mongodb
       - ollama
+      - redpanda
     restart: unless-stopped
 
   worker-tex:
@@ -144,8 +118,38 @@ services:
       - ./exports/pdfs:/app/exports/pdfs
     restart: unless-stopped
 
+  # ── Twitter Pipeline (dormant — activate with: docker compose --profile twitter up)
+  worker-twitter:
+    build: .
+    container_name: symmetry_worker_twitter
+    entrypoint: ["python", "-m", "app.workers.twitter_worker"]
+    env_file: .env
+    depends_on:
+      - redpanda
+    profiles: ["twitter"]
 
-  # --- Event Streaming (Redpanda) ---
+  worker-analysis:
+    build: .
+    container_name: symmetry_worker_analysis
+    entrypoint: ["python", "-m", "app.workers.analysis_worker"]
+    env_file: .env
+    depends_on:
+      - redpanda
+      - ollama
+    profiles: ["twitter"]
+
+  worker-mongo:
+    build: .
+    container_name: symmetry_worker_mongo
+    entrypoint: ["python", "-m", "app.workers.mongo_sink"]
+    env_file: .env
+    restart: unless-stopped
+    depends_on:
+      - redpanda
+      - mongodb
+    profiles: ["twitter"]
+
+  # ── Event Streaming (Redpanda) ────────────────────────────────────────────
   redpanda:
     image: docker.redpanda.com/redpandadata/redpanda:v23.2.14
     container_name: symmetry_redpanda
@@ -182,7 +186,7 @@ services:
     depends_on:
       - redpanda
 
-  # --- Monitoring ---
+  # ── Monitoring ────────────────────────────────────────────────────────────
   prometheus:
     image: prom/prometheus:latest
     container_name: symmetry_prometheus
@@ -206,5 +210,3 @@ volumes:
   symmetry_ollama_data:
   caddy_data:
   caddy_config:
-
-

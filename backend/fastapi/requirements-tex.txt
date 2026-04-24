@@ -1,7 +1,2 @@
-# Core dependencies for the Tex Worker
-motor>=3.6.0
-aiokafka==0.10.0
-httpx==0.26.0
-pydantic-settings==2.1.0
-pydantic==2.5.3
-python-dotenv==1.0.0
+# DEPRECATED: Moved to requirements/tex.txt
+-r requirements/tex.txt

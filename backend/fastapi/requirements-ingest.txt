@@ -1,8 +1,2 @@
-# Optimized for RSS and Web Scraping
-motor>=3.6.0
-httpx==0.26.0
-feedparser==6.0.10
-beautifulsoup4==4.12.3
-pydantic-settings==2.1.0
-python-dotenv==1.0.0
-aiokafka==0.10.0
+# DEPRECATED: Moved to requirements/ingest.txt
+-r requirements/ingest.txt

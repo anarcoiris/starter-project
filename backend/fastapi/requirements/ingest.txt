@@ -1,0 +1,8 @@
+# =============================================================================
+# Symmetry Ingest Worker — Additional dependencies (extends base.txt)
+# =============================================================================
+-r base.txt
+
+# RSS Ingestion
+feedparser==6.0.10
+beautifulsoup4==4.12.3

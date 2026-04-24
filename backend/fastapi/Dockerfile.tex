@@ -23,8 +23,8 @@ RUN wget https://github.com/tectonic-typesetting/tectonic/releases/download/tect
 WORKDIR /app
 
 # Use optimized requirements
-COPY requirements-tex.txt ./requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
+COPY requirements/ ./requirements/
+RUN pip install --no-cache-dir -r requirements/tex.txt
 
 COPY . .
 

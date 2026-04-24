@@ -1,3 +1,11 @@
+"""
+Symmetry Platform — TeX Rendering Worker
+
+Consumes PDF rendering tasks from Redpanda's 'tex_rendering_queue',
+generates LaTeX via Ollama, compiles it with Tectonic, and updates
+the article record in MongoDB with the public PDF URL.
+"""
+
 import asyncio
 import json
 import logging
@@ -5,16 +13,22 @@ import os
 import subprocess
 import re
 import hashlib
+
 from aiokafka import AIOKafkaConsumer, AIOKafkaProducer
-from app.services.tex_service import TexService
-from app.core.config import settings
+from motor.motor_asyncio import AsyncIOMotorClient
 import httpx
 
-logging.basicConfig(level=logging.INFO)
+from app.core.config import settings
+from app.core.utils import retry_async
+from app.repositories.article_repository import ArticleRepository
+from app.services.tex_service import TexService
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+)
 logger = logging.getLogger("TexWorker")
 
-from app.repositories.article_repository import ArticleRepository
-from motor.motor_asyncio import AsyncIOMotorClient
 
 class TexWorker:
     def __init__(self):
@@ -24,32 +38,54 @@ class TexWorker:
         self.repo = None
         self.db_client = None
 
-    async def start(self):
-        # Initialize DB
-        self.db_client = AsyncIOMotorClient(settings.mongodb_url)
-        db = self.db_client[settings.mongodb_db_name]
-        self.repo = ArticleRepository(db)
-
-        self.consumer = AIOKafkaConsumer(
+    async def _connect_consumer(self) -> AIOKafkaConsumer:
+        """Create and start a Kafka consumer (used with retry_async)."""
+        consumer = AIOKafkaConsumer(
             'tex_rendering_queue',
             bootstrap_servers=settings.kafka_bootstrap_servers,
             group_id="tex-renderers",
             value_deserializer=lambda x: json.loads(x.decode('utf-8'))
         )
-        self.producer = AIOKafkaProducer(
+        await consumer.start()
+        return consumer
+
+    async def _connect_producer(self) -> AIOKafkaProducer:
+        """Create and start a Kafka producer (used with retry_async)."""
+        producer = AIOKafkaProducer(
             bootstrap_servers=settings.kafka_bootstrap_servers
         )
-        
-        await self.consumer.start()
-        await self.producer.start()
-        logger.info("Tex Worker started. Listening for rendering tasks...")
-        
+        await producer.start()
+        return producer
+
+    async def start(self):
+        # ── Initialize DB ────────────────────────────────────────────────
+        self.db_client = AsyncIOMotorClient(settings.mongodb_url)
+        db = self.db_client[settings.mongodb_db_name]
+        self.repo = ArticleRepository(db)
+
+        # ── Connect to Kafka with retry ──────────────────────────────────
+        self.consumer = await retry_async(
+            self._connect_consumer,
+            description="Kafka consumer connection",
+            max_attempts=15,
+            base_delay=2.0,
+        )
+        self.producer = await retry_async(
+            self._connect_producer,
+            description="Kafka producer connection",
+            max_attempts=15,
+            base_delay=2.0,
+        )
+        logger.info("TeX Worker started. Listening for rendering tasks...")
+
+        # ── Main loop ────────────────────────────────────────────────────
         try:
             async for msg in self.consumer:
                 article_data = msg.value
                 logger.info(f"Processing PDF rendering for: {article_data.get('title')}")
                 await self.process_task(article_data)
         finally:
+            logger.info("Shutting down TeX worker...")
             await self.consumer.stop()
             await self.producer.stop()
             if self.db_client:
@@ -79,7 +115,7 @@ class TexWorker:
                 await self.repo.update_pdf_path(article_id, public_url)
                 logger.info(f"Database updated for article {article_id} with public URL.")
         except Exception as e:
-            logger.error(f"Failed to process rendering task: {e}")
+            logger.error(f"Failed to process rendering task: {e}", exc_info=True)
 
     async def get_ai_snippet(self, article: dict) -> str:
         prompt = self.tex_service.get_latex_prompt(article)
@@ -99,7 +135,6 @@ class TexWorker:
                     
                     # Clean the response: Extract only content inside backticks if they exist
                     if "```" in raw_content:
-                        # Extract content between the first and last triple backticks
                         match = re.search(r'```(?:latex)?\n?(.*?)\n?```', raw_content, re.DOTALL)
                         if match:
                             clean_content = match.group(1).strip()
@@ -108,8 +143,7 @@ class TexWorker:
                     else:
                         clean_content = raw_content
                         
-                    # 2. Aggressive cleanup of common LLM mistakes
-                    # Remove any duplicate class/preamble/document tags
+                    # Aggressive cleanup of common LLM mistakes
                     forbidden = [
                         r"\\documentclass.*", 
                         r"\\usepackage.*", 
@@ -132,10 +166,7 @@ class TexWorker:
         return ""
 
     async def compile_tex(self, tex_content: str, article_id: str) -> str:
-        """
-        Saves the content to a file and compiles it using tectonic.
-        """
-        # We use a stable export path mapped to the host
+        """Saves the content to a file and compiles it using tectonic."""
         export_base = "/app/exports/pdfs"
         work_dir = os.path.join(export_base, article_id)
         os.makedirs(work_dir, exist_ok=True)
@@ -144,7 +175,7 @@ class TexWorker:
         with open(tex_file, "w", encoding="utf-8") as f:
             f.write(tex_content)
             
-        # Copy the .sty and modification files to the work dir
+        # Copy the .sty and asset files to the work dir
         template_src = "/app/app/services/article_templates/newspaper"
         for f_name in ["newspaper.sty", "newspaper-mod.sty", "atom.jpg"]:
              src_path = os.path.join(template_src, f_name)
@@ -154,7 +185,6 @@ class TexWorker:
                  logger.warning(f"Template asset missing: {src_path}")
 
         try:
-            # We use tectonic because it's self-contained and downloads missing packages
             result = subprocess.run(
                 ["tectonic", "article.tex"],
                 cwd=work_dir,
@@ -170,6 +200,7 @@ class TexWorker:
             logger.error(f"Compilation process failed: {e}")
             
         return ""
+
 
 if __name__ == "__main__":
     worker = TexWorker()

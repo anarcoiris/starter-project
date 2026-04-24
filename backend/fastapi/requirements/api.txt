@@ -1,0 +1,16 @@
+# =============================================================================
+# Symmetry API — Additional dependencies (extends base.txt)
+# =============================================================================
+-r base.txt
+
+# FastAPI Framework
+fastapi==0.110.0
+uvicorn[standard]==0.27.0
+python-multipart==0.0.9
+
+# RSS Ingestion (also needed by API for manual ingest endpoint)
+feedparser==6.0.10
+beautifulsoup4==4.12.3
+
+# Observability
+prometheus-fastapi-instrumentator==7.0.0

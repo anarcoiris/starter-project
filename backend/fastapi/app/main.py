@@ -18,7 +18,6 @@ from app.core.database import initialize_mongo_schema
 from app.api.v1.endpoints import articles, ollama, ingest, rewards, debug, users
 
 from aiokafka import AIOKafkaProducer
-import json
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
