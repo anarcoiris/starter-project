@@ -1,6 +1,6 @@
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from app.models.user import UserProfile
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 
 class UserRepository:
@@ -19,7 +19,7 @@ class UserRepository:
             {
                 "$set": {
                     "walletAddress": wallet_address,
-                    "lastActive": datetime.now()
+                    "lastActive": datetime.now(timezone.utc)
                 }
             },
             upsert=True
@@ -29,6 +29,6 @@ class UserRepository:
     async def update_activity(self, user_id: str):
         await self.collection.update_one(
             {"userId": user_id},
-            {"$set": {"lastActive": datetime.now()}},
+            {"$set": {"lastActive": datetime.now(timezone.utc)}},
             upsert=True
         )

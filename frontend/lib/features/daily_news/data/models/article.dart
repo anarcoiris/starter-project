@@ -7,6 +7,7 @@ class ArticleModel extends ArticleEntity {
   const ArticleModel({
     String? articleId,
     String? author,
+    String? authorId,
     String? title,
     String? description,
     String? url,
@@ -19,6 +20,7 @@ class ArticleModel extends ArticleEntity {
   }) : super(
           articleId: articleId,
           author: author,
+          authorId: authorId,
           title: title,
           description: description,
           url: url,
@@ -44,6 +46,7 @@ class ArticleModel extends ArticleEntity {
     return ArticleModel(
       articleId: artId,
       author: map['author'] ?? "",
+      authorId: map['authorId'],
       title: map['title'] ?? "",
       description: map['description'] ?? "",
       url: map['url'] ?? "",
@@ -63,6 +66,7 @@ class ArticleModel extends ArticleEntity {
   ArticleEntity toEntity() => ArticleEntity(
         articleId: articleId,
         author: author,
+        authorId: authorId,
         title: title,
         description: description,
         url: url,
@@ -79,6 +83,7 @@ class ArticleModel extends ArticleEntity {
     return ArticleModel(
         articleId: entity.articleId,
         author: entity.author,
+        authorId: entity.authorId,
         title: entity.title,
         description: entity.description,
         url: entity.url,
@@ -95,6 +100,7 @@ class ArticleModel extends ArticleEntity {
     return {
       'articleId': articleId,
       'author': author ?? "",
+      'authorId': authorId,
       'title': title ?? "",
       'description': description ?? "",
       'url': url ?? "",

@@ -1,6 +1,6 @@
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from app.models.reward import UserReward, RewardTransaction
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 
 class RewardRepository:
@@ -18,7 +18,7 @@ class RewardRepository:
             amount=amount,
             reason=reason,
             referenceId=reference_id,
-            timestamp=datetime.now()
+            timestamp=datetime.now(timezone.utc)
         )
         
         # Atomically prevent duplicate claims for the same reference_id
@@ -32,7 +32,7 @@ class RewardRepository:
             {
                 "$inc": {"totalBalance": amount},
                 "$push": {"transactions": transaction.model_dump()},
-                "$set": {"lastUpdated": datetime.now()}
+                "$set": {"lastUpdated": datetime.now(timezone.utc)}
             },
             upsert=True
         )
@@ -52,14 +52,14 @@ class RewardRepository:
         negative_tx = RewardTransaction(
             amount=-amount,
             reason=f"Transfer to {to_user_id}: {reason}",
-            timestamp=datetime.now()
+            timestamp=datetime.now(timezone.utc)
         )
         await self.collection.update_one(
             {"userId": from_user_id},
             {
                 "$inc": {"totalBalance": -amount},
                 "$push": {"transactions": negative_tx.model_dump()},
-                "$set": {"lastUpdated": datetime.now()}
+                "$set": {"lastUpdated": datetime.now(timezone.utc)}
             },
             upsert=True
         )
@@ -68,14 +68,14 @@ class RewardRepository:
         positive_tx = RewardTransaction(
             amount=amount,
             reason=f"Transfer from {from_user_id}: {reason}",
-            timestamp=datetime.now()
+            timestamp=datetime.now(timezone.utc)
         )
         await self.collection.update_one(
             {"userId": to_user_id},
             {
                 "$inc": {"totalBalance": amount},
                 "$push": {"transactions": positive_tx.model_dump()},
-                "$set": {"lastUpdated": datetime.now()}
+                "$set": {"lastUpdated": datetime.now(timezone.utc)}
             },
             upsert=True
         )

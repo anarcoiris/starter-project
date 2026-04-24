@@ -2,7 +2,7 @@ import feedparser
 import httpx
 import logging
 from bs4 import BeautifulSoup
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional
 import hashlib
 import json
@@ -126,7 +126,7 @@ class IngestionService:
             idx = hash(title) % len(fallbacks)
             url_to_image = fallbacks[idx]
 
-        published_at = datetime.now()
+        published_at = datetime.now(timezone.utc)
         if entry.get("published_parsed"):
             published_at = datetime(*entry.published_parsed[:6])
 
@@ -182,7 +182,6 @@ class IngestionService:
             )
             
             if response.status_code == 200:
-                import json
                 result = response.json()
                 refactored = json.loads(result["response"])
                 

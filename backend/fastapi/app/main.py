@@ -14,7 +14,7 @@ logging.basicConfig(
 logger = logging.getLogger("SymmetryAPI")
 
 from app.core.config import settings
-from app.mongo_schema import initialize_mongo_schema
+from app.core.database import initialize_mongo_schema
 from app.api.v1.endpoints import articles, ollama, ingest, rewards, debug, users
 
 from aiokafka import AIOKafkaProducer

@@ -1,16 +1,9 @@
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends
 from app.models.reward import ClaimRequest
 from app.services.reward_service import RewardService
-from app.repositories.reward_repository import RewardRepository
-from app.repositories.article_repository import ArticleRepository
+from app.api.deps import get_reward_service
 
 router = APIRouter()
-
-def get_reward_service(request: Request) -> RewardService:
-    db = request.app.state.db
-    reward_repo = RewardRepository(db)
-    article_repo = ArticleRepository(db)
-    return RewardService(reward_repo, article_repo)
 
 @router.post("/claim")
 async def claim_reward(request: ClaimRequest, service: RewardService = Depends(get_reward_service)):
@@ -41,4 +34,3 @@ async def init_custodian(amount: float = 1000000.0, service: RewardService = Dep
     Initialize the custodian account with pre-mined tokens.
     """
     return await service.initialize_custodian(amount)
-

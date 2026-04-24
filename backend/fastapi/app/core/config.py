@@ -26,7 +26,7 @@ class Settings(BaseSettings):
     base_reward: float = 5.0
     min_read_time: float = 10.0
     
-    # Security
-    secret_key: str = "supersymmetry-secret-key-change-in-prod"
+    # Security (MUST be set via environment variable in production)
+    secret_key: str = "dev-only-change-in-prod"
 
 settings = Settings()

@@ -1,6 +1,10 @@
+import logging
 from app.repositories.reward_repository import RewardRepository
 from app.repositories.article_repository import ArticleRepository
+from app.core.config import settings
 from fastapi import HTTPException
+
+logger = logging.getLogger(__name__)
 
 class RewardService:
     def __init__(self, reward_repo: RewardRepository, article_repo: ArticleRepository):
@@ -8,8 +12,6 @@ class RewardService:
         self.article_repo = article_repo
 
     async def claim_reading_reward(self, user_id: str, article_id: str, read_time: float = 0.0):
-        from app.core.config import settings
-        
         # 1. Check if article exists
         article = await self.article_repo.get_by_id(article_id)
         if not article:
@@ -17,8 +19,7 @@ class RewardService:
 
         # 2. Basic Scoring Layer: Minimum read time from settings
         if read_time < settings.min_read_time:
-            import logging
-            logging.warning(f"Recompensa rechazada para {user_id}: tiempo insuficiente ({read_time}s)")
+            logger.warning(f"Reward rejected for {user_id}: insufficient read time ({read_time}s)")
             raise HTTPException(
                 status_code=400, 
                 detail=f"Lectura demasiado breve para recompensa. Mínimo: {settings.min_read_time}s"
@@ -53,7 +54,6 @@ class RewardService:
 
 
     async def initialize_custodian(self, amount: float = 1000000.0):
-        from app.core.config import settings
         custodian_id = settings.custodian_email
         
         # Check if already initialized to avoid duplicates
@@ -69,8 +69,6 @@ class RewardService:
         return {"status": "initialized", "balance": amount}
 
     async def process_airdrop(self, user_id: str):
-        from app.core.config import settings
-        
         # 0. Skip if custodian
         if user_id == settings.custodian_email:
             return {"status": "skipped", "reason": "Custodian account"}

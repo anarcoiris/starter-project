@@ -45,7 +45,7 @@ class ArticleWidget extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildImage(context),
-              _buildContent(),
+              _buildContent(context),
             ],
           ),
         ),
@@ -159,7 +159,38 @@ class ArticleWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildContent() {
+  Widget _buildAuthor(BuildContext context) {
+    final bool isUser = article!.authorId != null;
+    
+    return GestureDetector(
+      onTap: isUser ? () {
+        developer.log('Navegando al perfil de: ${article!.authorId}', name: 'SymmetryUI');
+        Navigator.pushNamed(context, '/Profile', arguments: article!.authorId);
+      } : null,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            isUser ? Icons.person_pin : Icons.person_outline,
+            size: 14,
+            color: isUser ? AppColors.primary : AppColors.textMuted,
+          ),
+          const SizedBox(width: 4),
+          Text(
+            article!.author ?? 'Anónimo',
+            style: TextStyle(
+              fontSize: 11,
+              color: isUser ? AppColors.primary : AppColors.textMuted,
+              fontWeight: isUser ? FontWeight.bold : FontWeight.normal,
+              decoration: isUser ? TextDecoration.underline : TextDecoration.none,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildContent(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
       child: Column(
@@ -224,12 +255,7 @@ class ArticleWidget extends StatelessWidget {
           const SizedBox(height: 16),
           Row(
             children: [
-              const Icon(Icons.today, size: 14, color: AppColors.textMuted),
-              const SizedBox(width: 6),
-              Text(
-                article!.publishedAt?.split('T')[0] ?? '',
-                style: const TextStyle(fontSize: 11, color: AppColors.textMuted),
-              ),
+              _buildAuthor(context),
               const Spacer(),
               const Icon(Icons.share_outlined, size: 16, color: AppColors.primary),
               if ((article!.tokensEarned ?? 0) > 0) ...[

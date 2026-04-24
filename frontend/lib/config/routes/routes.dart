@@ -9,6 +9,7 @@ import 'package:news_app_clean_architecture/features/daily_news/presentation/pag
 import 'package:news_app_clean_architecture/features/daily_news/presentation/pages/publish_article/publish_article_page.dart';
 import 'package:news_app_clean_architecture/features/daily_news/presentation/pages/chatbot/owl_assistant_page.dart';
 import 'package:news_app_clean_architecture/features/daily_news/presentation/pages/topics/topics_page.dart';
+import 'package:news_app_clean_architecture/features/daily_news/presentation/pages/social/chat_room_page.dart';
 import 'package:news_app_clean_architecture/features/daily_news/presentation/pages/search/search_page.dart';
 
 class AppRoutes {
@@ -27,7 +28,7 @@ class AppRoutes {
         return _materialRoute(const RegisterPage());
 
       case '/Profile':
-        return _materialRoute(const ProfilePage());
+        return _materialRoute(ProfilePage(userId: settings.arguments as String?));
 
       case '/Topics':
         return _materialRoute(const TopicsPage());
@@ -46,6 +47,13 @@ class AppRoutes {
 
       case '/OwlAssistant':
         return _materialRoute(const OwlAssistantPage());
+
+      case '/ChatRoom':
+        final args = settings.arguments as Map<String, dynamic>;
+        return _materialRoute(ChatRoomPage(
+          receiverId: args['receiverId'],
+          receiverName: args['receiverName'],
+        ));
         
       default:
         return _materialRoute(const DailyNews());

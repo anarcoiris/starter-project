@@ -28,10 +28,8 @@ class ArticleRepositoryImpl implements ArticleRepository {
    try {
      developer.log('Solicitando artículos al backend local/remoto... Categoría: $category', name: 'SymmetryArticles');
      final httpResponse = await _newsApiService.getNewsArticles(
-       apiKey: newsAPIKey,
-       country: countryQuery,
-       category: category ?? categoryQuery,
-     );
+        category: category ?? categoryQuery,
+      );
 
 
      if (httpResponse.response.statusCode == HttpStatus.ok) {

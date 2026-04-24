@@ -103,6 +103,10 @@ Future<void> initializeDependencies() async {
     GetArticleUseCase(sl())
   );
 
+  sl.registerSingleton<GetPublicProfileUseCase>(
+    GetPublicProfileUseCase(sl())
+  );
+
   sl.registerSingleton<PostArticleUseCase>(
     PostArticleUseCase(sl())
   );

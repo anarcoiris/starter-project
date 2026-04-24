@@ -5,6 +5,7 @@ from app.repositories.user_repository import UserRepository
 from app.repositories.cache_repository import CacheRepository
 from app.services.article_service import ArticleService
 from app.services.ingestion_service import IngestionService
+from app.services.reward_service import RewardService
 
 def get_db(request: Request):
     return request.app.state.db
@@ -30,3 +31,10 @@ def get_ingestion_service(request: Request) -> IngestionService:
         get_cache_repository(request),
         producer=request.app.state.producer
     )
+
+def get_reward_service(request: Request) -> RewardService:
+    return RewardService(
+        get_reward_repository(request),
+        get_article_repository(request)
+    )
+

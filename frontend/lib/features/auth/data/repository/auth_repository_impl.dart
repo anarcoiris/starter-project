@@ -18,20 +18,36 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Stream<UserEntity?> getUserProfile(String uid) {
     return FirebaseFirestore.instance.collection('users').doc(uid).snapshots().map((snapshot) {
-      final user = _firebaseAuth.currentUser;
-      if (user == null) return null;
-      
       final data = snapshot.data();
+      if (data == null) return null;
+      
       return UserEntity(
-        uid: user.uid,
-        email: user.email,
-        displayName: user.displayName,
-        photoUrl: user.photoURL,
-        bio: data?['bio'],
-        reputationScore: (data?['reputation'] as num?)?.toInt() ?? 0,
-        isVerified: data?['isVerified'] ?? false,
+        uid: uid,
+        email: data['email'],
+        displayName: data['displayName'],
+        photoUrl: data['photoUrl'],
+        bio: data['bio'],
+        reputationScore: (data['reputation'] as num?)?.toInt() ?? 0,
+        isVerified: data['isVerified'] ?? false,
       );
     });
+  }
+
+  @override
+  Future<UserEntity?> getPublicProfile(String uid) async {
+    final doc = await FirebaseFirestore.instance.collection('users').doc(uid).get();
+    final data = doc.data();
+    if (data == null) return null;
+
+    return UserEntity(
+      uid: uid,
+      email: data['email'],
+      displayName: data['displayName'],
+      photoUrl: data['photoUrl'],
+      bio: data['bio'],
+      reputationScore: (data['reputation'] as num?)?.toInt() ?? 0,
+      isVerified: data['isVerified'] ?? false,
+    );
   }
 
   @override

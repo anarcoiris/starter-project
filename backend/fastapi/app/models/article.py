@@ -1,14 +1,15 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 from pydantic import BaseModel, Field
 
 class ArticleBase(BaseModel):
     author: str
+    authorId: Optional[str] = None # Link to UserProfile.userId
     title: str
     description: str
     urlToImage: str
     content: str
-    publishedAt: datetime = Field(default_factory=datetime.now)
+    publishedAt: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     category: str = "general"
 
 class ArticleCreate(ArticleBase):
@@ -42,6 +43,6 @@ class Article(ArticleBase):
 class ArticleRead(BaseModel):
     userId: str
     readTimeSeconds: int
-    readAt: datetime = Field(default_factory=datetime.now)
+    readAt: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 

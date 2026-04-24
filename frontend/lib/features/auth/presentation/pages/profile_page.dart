@@ -11,7 +11,8 @@ import 'package:news_app_clean_architecture/features/daily_news/domain/daily_new
 import 'package:news_app_clean_architecture/injection_container.dart';
 
 class ProfilePage extends StatefulWidget {
-  const ProfilePage({super.key});
+  final String? userId;
+  const ProfilePage({super.key, this.userId});
 
   @override
   State<ProfilePage> createState() => _ProfilePageState();
@@ -21,11 +22,28 @@ class _ProfilePageState extends State<ProfilePage> {
   final TextEditingController _bioController = TextEditingController();
   bool _isEditing = false;
   double _balance = 0.0;
+  UserEntity? _publicUser;
+  bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    _fetchBalance();
+    if (widget.userId != null) {
+      _fetchPublicProfile();
+    } else {
+      _fetchBalance();
+    }
+  }
+
+  void _fetchPublicProfile() async {
+    setState(() => _isLoading = true);
+    final result = await sl<GetPublicProfileUseCase>().call(params: widget.userId);
+    if (mounted && result is DataSuccess) {
+      setState(() {
+        _publicUser = result.data;
+        _isLoading = false;
+      });
+    }
   }
 
   void _fetchBalance() async {
@@ -88,21 +106,39 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     final authState = context.watch<AuthCubit>().state;
-    if (authState is! Authenticated) return const SizedBox();
+    if (authState is! Authenticated && widget.userId == null) return const SizedBox();
 
-    final user = authState.user;
+    final currentUser = authState is Authenticated ? authState.user : null;
+    final bool isOwnProfile = widget.userId == null || widget.userId == currentUser?.uid;
+    final user = isOwnProfile ? currentUser! : _publicUser;
+
+    if (_isLoading) {
+      return const Scaffold(
+        backgroundColor: Color(0xFF03050F),
+        body: Center(child: CircularProgressIndicator(color: AppColors.primary)),
+      );
+    }
+
+    if (user == null) {
+      return Scaffold(
+        backgroundColor: const Color(0xFF03050F),
+        appBar: AppBar(backgroundColor: Colors.transparent, elevation: 0),
+        body: const Center(child: Text('AGENTE NO ENCONTRADO', style: TextStyle(color: Colors.white54))),
+      );
+    }
 
     return Scaffold(
       backgroundColor: const Color(0xFF03050F),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Text('PERFIL DE AGENTE', style: TextStyle(letterSpacing: 2, fontWeight: FontWeight.bold)),
+        title: Text(isOwnProfile ? 'MI PERFIL DE AGENTE' : 'PERFIL DE AGENTE', style: const TextStyle(letterSpacing: 2, fontWeight: FontWeight.bold)),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.logout, color: Colors.redAccent),
-            onPressed: () => _showLogoutDialog(context),
-          )
+          if (isOwnProfile)
+            IconButton(
+              icon: const Icon(Icons.logout, color: Colors.redAccent),
+              onPressed: () => _showLogoutDialog(context),
+            )
         ],
       ),
       body: SingleChildScrollView(
@@ -169,18 +205,18 @@ class _ProfilePageState extends State<ProfilePage> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       const Text('HISTORIA DEL AGENTE (BIO)', style: TextStyle(color: Colors.white54, fontSize: 10, letterSpacing: 1)),
-                      IconButton(
-                        icon: Icon(_isEditing ? Icons.check : Icons.edit, color: Colors.cyanAccent, size: 16),
-                        onPressed: () {
-                          if (_isEditing) {
-                            context.read<AuthCubit>().updateBio(_bioController.text);
-                          } else {
-                            _bioController.text = user.bio ?? '';
-                          }
-                          setState(() => _isEditing = !_isEditing);
-                        },
-
-                      )
+                      if (isOwnProfile)
+                        IconButton(
+                          icon: Icon(_isEditing ? Icons.check : Icons.edit, color: Colors.cyanAccent, size: 16),
+                          onPressed: () {
+                            if (_isEditing) {
+                              context.read<AuthCubit>().updateBio(_bioController.text);
+                            } else {
+                              _bioController.text = user.bio ?? '';
+                            }
+                            setState(() => _isEditing = !_isEditing);
+                          },
+                        )
                     ],
                   ),
                   const SizedBox(height: 10),
@@ -210,12 +246,40 @@ class _ProfilePageState extends State<ProfilePage> {
             Row(
               children: [
                 _buildStatCard('REPUTACIÓN', '${user.reputationScore}', Icons.shield_outlined),
-                const SizedBox(width: 12),
-                _buildStatCard('BOLSA SYM', '${_balance.toInt()}', Icons.account_balance_wallet_outlined, isHighlight: true),
+                if (isOwnProfile) ...[
+                  const SizedBox(width: 12),
+                  _buildStatCard('BOLSA SYM', '${_balance.toInt()}', Icons.account_balance_wallet_outlined, isHighlight: true),
+                ],
                 const SizedBox(width: 12),
                 _buildStatCard('ARTÍCULOS', '0', Icons.article_outlined),
               ],
             ),
+            
+            if (!isOwnProfile) ...[
+              const SizedBox(height: 32),
+              SizedBox(
+                width: double.infinity,
+                height: 56,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    developer.log('Iniciando comunicación con: ${user.uid}', name: 'SymmetrySocial');
+                    Navigator.pushNamed(context, '/ChatRoom', arguments: {
+                      'receiverId': user.uid,
+                      'receiverName': user.displayName,
+                    });
+                  },
+                  icon: const Icon(Icons.chat_bubble_outline),
+                  label: const Text('ESTABLECER COMUNICACIÓN (CHAT)', style: TextStyle(letterSpacing: 1.5, fontWeight: FontWeight.bold)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.black,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    elevation: 10,
+                    shadowColor: AppColors.primary.withOpacity(0.5),
+                  ),
+                ),
+              ),
+            ]
           ],
         ),
       ),
