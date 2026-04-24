@@ -1,8 +1,11 @@
+import 'dart:developer' as developer;
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:news_app_clean_architecture/core/core.dart';
+import 'package:news_app_clean_architecture/features/auth/domain/entities/user.dart';
+import 'package:news_app_clean_architecture/features/auth/domain/usecases/get_public_profile.dart';
 import 'package:news_app_clean_architecture/features/auth/presentation/bloc/auth_cubit.dart';
 import 'package:news_app_clean_architecture/core/constants/app_colors.dart';
 import 'package:news_app_clean_architecture/core/constants/constants.dart';

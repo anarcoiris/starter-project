@@ -8,6 +8,7 @@ import 'package:dio/dio.dart';
 // Elegant Imports (Barrels)
 import 'package:news_app_clean_architecture/core/core.dart';
 import 'package:news_app_clean_architecture/features/auth/auth.dart';
+import 'package:news_app_clean_architecture/features/auth/domain/usecases/get_public_profile.dart';
 import 'package:news_app_clean_architecture/features/daily_news/domain/daily_news_domain.dart';
 import 'package:news_app_clean_architecture/features/daily_news/presentation/daily_news_presentation.dart';
 import 'package:news_app_clean_architecture/features/daily_news/presentation/bloc/reward/reward_cubit.dart';
