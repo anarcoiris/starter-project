@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:dio/dio.dart';
 import '../../../../core/resources/data_state.dart';
+import '../../../../core/resources/failure.dart';
 import '../../domain/repository/reward_repository.dart';
 import '../data_sources/remote/reward_api_service.dart';
 
@@ -15,15 +16,9 @@ class RewardRepositoryImpl implements RewardRepository {
       final result = await _rewardApiService.claimReward(userId, articleId, readTime);
       return DataSuccess(result);
     } on DioException catch (e) {
-      return DataFailed(e);
+      return DataFailed(ServerFailure(e.message ?? "API Error"));
     } catch (e) {
-      return DataFailed(
-        DioException(
-          requestOptions: RequestOptions(path: ''),
-          error: e.toString(),
-          type: DioExceptionType.unknown,
-        ),
-      );
+      return DataFailed(ServerFailure(e.toString()));
     }
   }
 
@@ -34,15 +29,9 @@ class RewardRepositoryImpl implements RewardRepository {
       final balance = (result['balance'] as num).toDouble();
       return DataSuccess(balance);
     } on DioException catch (e) {
-      return DataFailed(e);
+      return DataFailed(ServerFailure(e.message ?? "API Error"));
     } catch (e) {
-       return DataFailed(
-        DioException(
-          requestOptions: RequestOptions(path: ''),
-          error: e.toString(),
-          type: DioExceptionType.unknown,
-        ),
-      );
+      return DataFailed(ServerFailure(e.toString()));
     }
   }
 }

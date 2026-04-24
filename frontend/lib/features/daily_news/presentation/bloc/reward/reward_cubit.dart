@@ -33,10 +33,7 @@ class RewardCubit extends Cubit<RewardState> {
     }
 
     if (dataState is DataFailed) {
-      String errorMessage = 'Error de conexión';
-      if (dataState.error != null && dataState.error!.response?.data != null) {
-         errorMessage = dataState.error!.response?.data['detail'] ?? errorMessage;
-      }
+      String errorMessage = dataState.error?.message ?? 'Error de conexión';
       emit(RewardClaimError(errorMessage));
     }
   }

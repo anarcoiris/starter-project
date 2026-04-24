@@ -5,6 +5,7 @@ import 'package:news_app_clean_architecture/core/constants/constants.dart';
 import 'package:news_app_clean_architecture/features/daily_news/data/data_sources/local/app_database.dart';
 import 'package:news_app_clean_architecture/features/daily_news/data/models/article.dart';
 import 'package:news_app_clean_architecture/core/resources/data_state.dart';
+import 'package:news_app_clean_architecture/core/resources/failure.dart';
 import 'package:news_app_clean_architecture/features/daily_news/domain/entities/article.dart';
 import 'package:news_app_clean_architecture/features/daily_news/domain/repository/article_repository.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -50,10 +51,7 @@ class ArticleRepositoryImpl implements ArticleRepository {
       final articles = await _firebaseDataSource.getArticles();
       return DataSuccess(articles);
     } catch (e) {
-      return DataFailed(DioException(
-        error: "Both Local and Firebase backends are unavailable",
-        requestOptions: RequestOptions(path: 'articles')
-      ));
+      return const DataFailed(ServerFailure("Both Local and Firebase backends are unavailable"));
     }
   }
 
@@ -80,10 +78,7 @@ class ArticleRepositoryImpl implements ArticleRepository {
         return DataSuccess(null);
       } catch (firebaseError) {
         developer.log('FALLO TOTAL: No se pudo publicar en ninguna plataforma: $firebaseError', name: 'SymmetryArticles');
-        return DataFailed(DioException(
-          error: "Error crítico: Fallo en API y Firebase. Revisa conexión y logs de Storage.",
-          requestOptions: RequestOptions(path: 'articles')
-        ));
+        return const DataFailed(ServerFailure("Error crítico: Fallo en API y Firebase. Revisa conexión y logs de Storage."));
       }
     }
   }
