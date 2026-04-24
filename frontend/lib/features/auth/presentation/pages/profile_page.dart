@@ -40,10 +40,10 @@ class _ProfilePageState extends State<ProfilePage> {
 
   void _fetchPublicProfile() async {
     setState(() => _isLoading = true);
-    final result = await sl<GetPublicProfileUseCase>().call(params: widget.userId);
-    if (mounted && result is DataSuccess) {
+    final user = await sl<GetPublicProfileUseCase>().call(params: widget.userId);
+    if (mounted) {
       setState(() {
-        _publicUser = result.data;
+        _publicUser = user;
         _isLoading = false;
       });
     }
