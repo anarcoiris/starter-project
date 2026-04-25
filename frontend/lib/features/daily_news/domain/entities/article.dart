@@ -13,6 +13,8 @@ class ArticleEntity extends Equatable{
   final double ? tokensEarned;
   final String ? source;
   final String ? pdfPath;
+  final int ? upvotes;
+  final int ? downvotes;
 
   const ArticleEntity({
     this.articleId,
@@ -27,6 +29,8 @@ class ArticleEntity extends Equatable{
     this.tokensEarned,
     this.source,
     this.pdfPath,
+    this.upvotes,
+    this.downvotes,
   });
 
 
@@ -45,6 +49,8 @@ class ArticleEntity extends Equatable{
       tokensEarned,
       source,
       pdfPath,
+      upvotes,
+      downvotes,
     ];
   }
 }

@@ -33,7 +33,7 @@ class AuthCubit extends Cubit<AuthState> {
   AuthCubit(this._authRepository) : super(AuthInitial()) {
     _authRepository.onAuthStateChanged.listen((user) {
       if (user != null) {
-        _subscribeToProfile(user.uid);
+        _subscribeToProfile(user);
       } else {
         _profileSubscription?.cancel();
         emit(Unauthenticated());
@@ -41,9 +41,10 @@ class AuthCubit extends Cubit<AuthState> {
     });
   }
 
-  void _subscribeToProfile(String uid) {
+  void _subscribeToProfile(UserEntity user) {
+    emit(Authenticated(user));
     _profileSubscription?.cancel();
-    _profileSubscription = _authRepository.getUserProfile(uid).listen((userProfile) {
+    _profileSubscription = _authRepository.getUserProfile(user.uid).listen((userProfile) {
       if (userProfile != null) {
         emit(Authenticated(userProfile));
       }

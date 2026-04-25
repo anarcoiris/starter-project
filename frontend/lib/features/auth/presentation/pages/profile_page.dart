@@ -1,6 +1,6 @@
 import 'dart:developer' as developer;
 import 'dart:ui';
-
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:news_app_clean_architecture/core/core.dart';
@@ -25,6 +25,7 @@ class _ProfilePageState extends State<ProfilePage> {
   final TextEditingController _bioController = TextEditingController();
   bool _isEditing = false;
   double _balance = 0.0;
+  int _articleCount = 0;
   UserEntity? _publicUser;
   bool _isLoading = false;
 
@@ -46,6 +47,20 @@ class _ProfilePageState extends State<ProfilePage> {
         _publicUser = user;
         _isLoading = false;
       });
+      _fetchArticleCount(widget.userId!);
+    }
+  }
+
+  void _fetchArticleCount(String uid) async {
+    try {
+      final snapshot = await FirebaseFirestore.instance.collection('articles').where('authorId', isEqualTo: uid).get();
+      if (mounted) {
+        setState(() {
+          _articleCount = snapshot.docs.length;
+        });
+      }
+    } catch (e) {
+      developer.log('Error fetching article count: $e');
     }
   }
 
@@ -60,6 +75,7 @@ class _ProfilePageState extends State<ProfilePage> {
           _balance = result.data!;
         });
       }
+      _fetchArticleCount(authState.user.uid);
     } catch (e) {
       debugPrint('Error fetching balance: $e');
     }
@@ -254,7 +270,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   _buildStatCard('BOLSA SYM', '${_balance.toInt()}', Icons.account_balance_wallet_outlined, isHighlight: true),
                 ],
                 const SizedBox(width: 12),
-                _buildStatCard('ARTÍCULOS', '0', Icons.article_outlined),
+                _buildStatCard('ARTÍCULOS', '$_articleCount', Icons.article_outlined),
               ],
             ),
             

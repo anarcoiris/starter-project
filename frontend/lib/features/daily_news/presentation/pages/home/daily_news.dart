@@ -69,7 +69,7 @@ class _DailyNewsState extends State<DailyNews> {
       _visibilityTimer?.cancel();
     } else if (notification is ScrollEndNotification) {
       _visibilityTimer?.cancel();
-      _visibilityTimer = Timer(const Duration(seconds: 3), () {
+      _visibilityTimer = Timer(const Duration(seconds: 1), () {
         if (mounted) {
           setState(() {
             _isOwlVisible = true;
@@ -300,15 +300,11 @@ class _DailyNewsState extends State<DailyNews> {
 
   void _onArticlePressed(BuildContext context, ArticleEntity article) async {
     if (_isNewspaperMode && article.pdfPath != null) {
-      // OPEN PDF
-      final Uri url = Uri.parse(article.pdfPath!);
-      if (await canLaunchUrl(url)) {
-        await launchUrl(url, mode: LaunchMode.externalApplication);
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No se pudo abrir el PDF.'))
-        );
-      }
+      // OPEN PDF inside the app
+      Navigator.pushNamed(context, '/PdfViewer', arguments: {
+        'pdfUrl': article.pdfPath!,
+        'title': article.title ?? 'Edición Impresa',
+      });
       return;
     }
     

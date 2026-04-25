@@ -22,7 +22,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     emit(ChatLoading(updatedMessages));
 
     try {
-      final response = await _chatService.getChatResponse(event.message);
+      final response = await _chatService.getChatResponse(updatedMessages);
       
       final finalMessages = List<Map<String, String>>.from(updatedMessages)
         ..add({'role': 'assistant', 'content': response});

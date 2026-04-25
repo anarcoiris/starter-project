@@ -101,7 +101,7 @@ class ArticleDetailsView extends HookWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildRewardStatus(),
-          _buildArticleTitleAndDate(),
+          _buildArticleTitleAndDate(context),
           _buildArticleImage(),
           _buildArticleContent(context),
           const SizedBox(height: 100),
@@ -110,7 +110,7 @@ class ArticleDetailsView extends HookWidget {
     );
   }
 
-  Widget _buildArticleTitleAndDate() {
+  Widget _buildArticleTitleAndDate(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 10),
       child: Column(
@@ -127,11 +127,25 @@ class ArticleDetailsView extends HookWidget {
           const SizedBox(height: 16),
           Row(
             children: [
-              const Icon(Ionicons.person_circle_outline, size: 20, color: AppColors.primary),
-              const SizedBox(width: 6),
-              Text(
-                article?.author ?? 'Periodista Symmetry',
-                style: const TextStyle(fontSize: 14, color: Colors.white70, fontWeight: FontWeight.w600),
+              GestureDetector(
+                onTap: article?.authorId != null ? () {
+                  Navigator.pushNamed(context, '/Profile', arguments: article!.authorId);
+                } : null,
+                child: Row(
+                  children: [
+                    const Icon(Ionicons.person_circle_outline, size: 20, color: AppColors.primary),
+                    const SizedBox(width: 6),
+                    Text(
+                      article?.author ?? 'Periodista Symmetry',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: article?.authorId != null ? AppColors.primary : Colors.white70,
+                        fontWeight: FontWeight.w600,
+                        decoration: article?.authorId != null ? TextDecoration.underline : TextDecoration.none,
+                      ),
+                    ),
+                  ],
+                ),
               ),
               const Spacer(),
               const Icon(Ionicons.time_outline, size: 16, color: AppColors.textMuted),
@@ -142,9 +156,52 @@ class ArticleDetailsView extends HookWidget {
               ),
             ],
           ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              _buildVoteButton(Ionicons.caret_up, AppColors.success, (article?.upvotes ?? 0).toString()),
+              const SizedBox(width: 16),
+              _buildVoteButton(Ionicons.caret_down, AppColors.highlight, (article?.downvotes ?? 0).toString()),
+              const Spacer(),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  'Score: ${((article?.upvotes ?? 0) - (article?.downvotes ?? 0))}',
+                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+                ),
+              ),
+            ],
+          ),
           const Divider(height: 32, color: Colors.white10),
         ],
       ),
+    );
+  }
+
+  Widget _buildVoteButton(IconData icon, Color color, String count) {
+    return StatefulBuilder(
+      builder: (context, setState) {
+        bool voted = false;
+        return GestureDetector(
+          onTap: () {
+            if (!voted) setState(() => voted = true);
+          },
+          child: Row(
+            children: [
+              Icon(icon, color: voted ? color : Colors.white54, size: 24),
+              const SizedBox(width: 4),
+              Text(
+                voted ? (int.parse(count) + 1).toString() : count,
+                style: TextStyle(color: voted ? color : Colors.white54, fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+        );
+      }
     );
   }
 

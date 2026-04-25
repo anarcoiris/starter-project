@@ -17,6 +17,8 @@ class ArticleModel extends ArticleEntity {
     double? tokensEarned,
     String? source,
     String? pdfPath,
+    int? upvotes,
+    int? downvotes,
   }) : super(
           articleId: articleId,
           author: author,
@@ -30,6 +32,8 @@ class ArticleModel extends ArticleEntity {
           tokensEarned: tokensEarned,
           source: source,
           pdfPath: pdfPath,
+          upvotes: upvotes,
+          downvotes: downvotes,
         );
 
 
@@ -58,6 +62,8 @@ class ArticleModel extends ArticleEntity {
       tokensEarned: (map['tokensEarned'] as num?)?.toDouble() ?? 0.0,
       source: map['source'] ?? "SYMMETRY NEWS",
       pdfPath: map['pdfPath'],
+      upvotes: map['upvotes'] ?? 0,
+      downvotes: map['downvotes'] ?? 0,
     );
   }
 
@@ -76,6 +82,8 @@ class ArticleModel extends ArticleEntity {
         tokensEarned: tokensEarned,
         source: source,
         pdfPath: pdfPath,
+        upvotes: upvotes,
+        downvotes: downvotes,
       );
 
 
@@ -92,7 +100,9 @@ class ArticleModel extends ArticleEntity {
         content: entity.content,
         tokensEarned: entity.tokensEarned,
         source: entity.source,
-        pdfPath: entity.pdfPath);
+        pdfPath: entity.pdfPath,
+        upvotes: entity.upvotes,
+        downvotes: entity.downvotes);
   }
 
 
@@ -109,6 +119,8 @@ class ArticleModel extends ArticleEntity {
       'content': content ?? "",
       'source': 'Symmetry Journalist',
       'category': 'general',
+      'upvotes': upvotes ?? 0,
+      'downvotes': downvotes ?? 0,
     };
   }
 

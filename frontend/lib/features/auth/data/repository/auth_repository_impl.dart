@@ -66,10 +66,20 @@ class AuthRepositoryImpl implements AuthRepository {
       email: email,
       password: password,
     );
+    final user = credential.user;
     if (displayName != null) {
-      await credential.user?.updateDisplayName(displayName);
+      await user?.updateDisplayName(displayName);
     }
-    return _mapFirebaseUser(credential.user);
+    
+    if (user != null) {
+      await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+        'email': user.email,
+        'displayName': displayName,
+        'createdAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+    }
+    
+    return _mapFirebaseUser(user);
   }
 
   @override
@@ -86,7 +96,18 @@ class AuthRepositoryImpl implements AuthRepository {
     );
 
     final userCredential = await _firebaseAuth.signInWithCredential(credential);
-    return _mapFirebaseUser(userCredential.user);
+    final user = userCredential.user;
+    
+    if (user != null) {
+      await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+        'email': user.email,
+        'displayName': user.displayName ?? googleUser.displayName,
+        'photoUrl': user.photoURL ?? googleUser.photoUrl,
+        'lastLoginAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+    }
+    
+    return _mapFirebaseUser(user);
   }
 
   @override

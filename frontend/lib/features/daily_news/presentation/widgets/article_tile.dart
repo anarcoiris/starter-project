@@ -163,11 +163,14 @@ class ArticleWidget extends StatelessWidget {
     final bool isUser = article!.authorId != null;
     
     return GestureDetector(
+      behavior: HitTestBehavior.opaque,
       onTap: isUser ? () {
         developer.log('Navegando al perfil de: ${article!.authorId}', name: 'SymmetryUI');
         Navigator.pushNamed(context, '/Profile', arguments: article!.authorId);
       } : null,
-      child: Row(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
+        child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
@@ -187,7 +190,7 @@ class ArticleWidget extends StatelessWidget {
           ),
         ],
       ),
-    );
+    ));
   }
 
   Widget _buildContent(BuildContext context) {
@@ -257,6 +260,17 @@ class ArticleWidget extends StatelessWidget {
             children: [
               _buildAuthor(context),
               const Spacer(),
+              Row(
+                children: [
+                  const Icon(Icons.arrow_upward, size: 12, color: AppColors.success),
+                  const SizedBox(width: 2),
+                  Text(
+                    '${(article!.upvotes ?? 0) - (article!.downvotes ?? 0)}',
+                    style: const TextStyle(fontSize: 10, color: AppColors.textMuted, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+              const SizedBox(width: 12),
               const Icon(Icons.share_outlined, size: 16, color: AppColors.primary),
               if ((article!.tokensEarned ?? 0) > 0) ...[
                 const SizedBox(width: 12),
