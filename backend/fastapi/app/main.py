@@ -1,4 +1,5 @@
 import logging
+import asyncio
 import time
 from fastapi import FastAPI, APIRouter, Request
 from contextlib import asynccontextmanager
@@ -30,12 +31,25 @@ async def lifespan(app: FastAPI):
     await app.state.motor_client.admin.command("ping")
     logger.info("MongoDB Connection Verified.")
     
-    # Initialize Kafka Producer
+    # Initialize Kafka Producer with Retry Logic
+    max_retries = 5
+    retry_delay = 5
     app.state.producer = AIOKafkaProducer(
         bootstrap_servers=settings.kafka_bootstrap_servers
     )
-    await app.state.producer.start()
-    logger.info("Kafka Producer Initialized.")
+    
+    for i in range(max_retries):
+        try:
+            await app.state.producer.start()
+            logger.info("Kafka Producer Initialized.")
+            break
+        except Exception as e:
+            if i < max_retries - 1:
+                logger.warning(f"Kafka Producer failed to start (attempt {i+1}/{max_retries}): {e}. Retrying in {retry_delay}s...")
+                await asyncio.sleep(retry_delay)
+            else:
+                logger.error(f"Kafka Producer failed to start after {max_retries} attempts: {e}")
+                raise e
     
     # Initialize schema/indexes
     await initialize_mongo_schema(app.state.db)
