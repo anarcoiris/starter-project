@@ -19,25 +19,32 @@ class StorageRepositoryImpl implements StorageRepository {
       final fileSize = await image.length();
       developer.log('Iniciando subida. Tamaño: ${fileSize / 1024} KB. Usuario: $userId', name: 'SymmetryStorage');
 
-      final fileName = "art_${DateTime.now().millisecondsSinceEpoch}.jpg";
+      final extension = image.path.split('.').last.toLowerCase();
+      final mimeType = extension == 'webp' ? 'image/webp' : (extension == 'png' ? 'image/png' : 'image/jpeg');
+      
+      final fileName = "art_${DateTime.now().millisecondsSinceEpoch}.$extension";
       final path = 'users/$userId/articles/$fileName';
       final ref = _firebaseStorage.ref().child(path);
       
-      developer.log('Destino en Storage: $path', name: 'SymmetryStorage');
+      developer.log('Destino en Storage: $path (Mime: $mimeType)', name: 'SymmetryStorage');
       
-      final uploadTask = await ref.putFile(
+      // Start upload task
+      final uploadTask = ref.putFile(
         image,
-        SettableMetadata(contentType: 'image/jpeg'),
+        SettableMetadata(contentType: mimeType),
       );
       
-      // Monitor snapshot (optional but good for debugging)
-      if (uploadTask.state == TaskState.error) {
-        throw Exception("La tarea de subida falló inmediatamente.");
+      // Wait for completion with more robustness
+      final snapshot = await uploadTask.whenComplete(() => null);
+      
+      if (snapshot.state == TaskState.success) {
+        final downloadUrl = await snapshot.ref.getDownloadURL();
+        developer.log('Subida completada con éxito. URL: $downloadUrl', name: 'SymmetryStorage');
+        return downloadUrl;
+      } else {
+        throw Exception("La subida no se completó correctamente. Estado: ${snapshot.state}");
       }
 
-      final downloadUrl = await uploadTask.ref.getDownloadURL();
-      developer.log('Subida completada. URL: $downloadUrl', name: 'SymmetryStorage');
-      return downloadUrl;
     } catch (e) {
       developer.log('ERROR CRÍTICO STORAGE: $e', name: 'SymmetryStorage', error: e);
       

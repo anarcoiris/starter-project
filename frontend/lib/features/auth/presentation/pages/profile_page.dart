@@ -1,15 +1,21 @@
+import 'dart:developer' as developer;
 import 'dart:ui';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:news_app_clean_architecture/core/core.dart';
+import 'package:news_app_clean_architecture/features/auth/domain/entities/user.dart';
+import 'package:news_app_clean_architecture/features/auth/domain/usecases/get_public_profile.dart';
 import 'package:news_app_clean_architecture/features/auth/presentation/bloc/auth_cubit.dart';
 import 'package:news_app_clean_architecture/core/constants/app_colors.dart';
 import 'package:news_app_clean_architecture/core/constants/constants.dart';
-import 'package:news_app_clean_architecture/features/daily_news/data/data_sources/remote/reward_api_service.dart';
+
+import 'package:news_app_clean_architecture/features/daily_news/domain/daily_news_domain.dart';
 import 'package:news_app_clean_architecture/injection_container.dart';
 
 class ProfilePage extends StatefulWidget {
-  const ProfilePage({super.key});
+  final String? userId;
+  const ProfilePage({super.key, this.userId});
 
   @override
   State<ProfilePage> createState() => _ProfilePageState();
@@ -19,21 +25,57 @@ class _ProfilePageState extends State<ProfilePage> {
   final TextEditingController _bioController = TextEditingController();
   bool _isEditing = false;
   double _balance = 0.0;
+  int _articleCount = 0;
+  UserEntity? _publicUser;
+  bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    _fetchBalance();
+    if (widget.userId != null) {
+      _fetchPublicProfile();
+    } else {
+      _fetchBalance();
+    }
+  }
+
+  void _fetchPublicProfile() async {
+    setState(() => _isLoading = true);
+    final user = await sl<GetPublicProfileUseCase>().call(params: widget.userId);
+    if (mounted) {
+      setState(() {
+        _publicUser = user;
+        _isLoading = false;
+      });
+      _fetchArticleCount(widget.userId!);
+    }
+  }
+
+  void _fetchArticleCount(String uid) async {
+    try {
+      final snapshot = await FirebaseFirestore.instance.collection('articles').where('authorId', isEqualTo: uid).get();
+      if (mounted) {
+        setState(() {
+          _articleCount = snapshot.docs.length;
+        });
+      }
+    } catch (e) {
+      developer.log('Error fetching article count: $e');
+    }
   }
 
   void _fetchBalance() async {
     try {
-      final result = await sl<RewardApiService>().getBalance(kAlphaTesterId);
-      if (mounted) {
+      final authState = context.read<AuthCubit>().state;
+      if (authState is! Authenticated) return;
+
+      final result = await sl<GetBalanceUseCase>().call(params: authState.user.uid);
+      if (mounted && result is DataSuccess) {
         setState(() {
-          _balance = (result['balance'] as num).toDouble();
+          _balance = result.data!;
         });
       }
+      _fetchArticleCount(authState.user.uid);
     } catch (e) {
       debugPrint('Error fetching balance: $e');
     }
@@ -83,21 +125,39 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     final authState = context.watch<AuthCubit>().state;
-    if (authState is! Authenticated) return const SizedBox();
+    if (authState is! Authenticated && widget.userId == null) return const SizedBox();
 
-    final user = authState.user;
+    final currentUser = authState is Authenticated ? authState.user : null;
+    final bool isOwnProfile = widget.userId == null || widget.userId == currentUser?.uid;
+    final user = isOwnProfile ? currentUser! : _publicUser;
+
+    if (_isLoading) {
+      return const Scaffold(
+        backgroundColor: Color(0xFF03050F),
+        body: Center(child: CircularProgressIndicator(color: AppColors.primary)),
+      );
+    }
+
+    if (user == null) {
+      return Scaffold(
+        backgroundColor: const Color(0xFF03050F),
+        appBar: AppBar(backgroundColor: Colors.transparent, elevation: 0),
+        body: const Center(child: Text('AGENTE NO ENCONTRADO', style: TextStyle(color: Colors.white54))),
+      );
+    }
 
     return Scaffold(
       backgroundColor: const Color(0xFF03050F),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Text('PERFIL DE AGENTE', style: TextStyle(letterSpacing: 2, fontWeight: FontWeight.bold)),
+        title: Text(isOwnProfile ? 'MI PERFIL DE AGENTE' : 'PERFIL DE AGENTE', style: const TextStyle(letterSpacing: 2, fontWeight: FontWeight.bold)),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.logout, color: Colors.redAccent),
-            onPressed: () => _showLogoutDialog(context),
-          )
+          if (isOwnProfile)
+            IconButton(
+              icon: const Icon(Icons.logout, color: Colors.redAccent),
+              onPressed: () => _showLogoutDialog(context),
+            )
         ],
       ),
       body: SingleChildScrollView(
@@ -164,44 +224,37 @@ class _ProfilePageState extends State<ProfilePage> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       const Text('HISTORIA DEL AGENTE (BIO)', style: TextStyle(color: Colors.white54, fontSize: 10, letterSpacing: 1)),
-                      IconButton(
-                        icon: Icon(_isEditing ? Icons.check : Icons.edit, color: Colors.cyanAccent, size: 16),
-                        onPressed: () {
-                          if (_isEditing) {
-                            context.read<AuthCubit>().updateBio(_bioController.text);
-                          }
-                          setState(() => _isEditing = !_isEditing);
-                        },
-                      )
+                      if (isOwnProfile)
+                        IconButton(
+                          icon: Icon(_isEditing ? Icons.check : Icons.edit, color: Colors.cyanAccent, size: 16),
+                          onPressed: () {
+                            if (_isEditing) {
+                              context.read<AuthCubit>().updateBio(_bioController.text);
+                            } else {
+                              _bioController.text = user.bio ?? '';
+                            }
+                            setState(() => _isEditing = !_isEditing);
+                          },
+                        )
                     ],
                   ),
                   const SizedBox(height: 10),
-                  StreamBuilder<DocumentSnapshot>(
-                    stream: FirebaseFirestore.instance.collection('users').doc(user.uid).snapshots(),
-                    builder: (context, snapshot) {
-                      String bio = 'Sin biografía registrada.';
-                      if (snapshot.hasData && snapshot.data!.exists) {
-                        bio = snapshot.data!.get('bio') ?? bio;
-                        if (!_isEditing) _bioController.text = bio;
-                      }
+                  _isEditing 
+                    ? TextField(
+                        controller: _bioController,
+                        style: const TextStyle(color: Colors.white, fontSize: 14),
+                        maxLines: 3,
+                        decoration: InputDecoration(
+                          filled: true,
+                          fillColor: Colors.white.withOpacity(0.05),
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
+                        ),
+                      )
+                    : Text(
+                        user.bio ?? 'Sin biografía registrada.',
+                        style: const TextStyle(color: Colors.white, fontSize: 14, height: 1.5),
+                      ),
 
-                      return _isEditing 
-                        ? TextField(
-                            controller: _bioController,
-                            style: const TextStyle(color: Colors.white, fontSize: 14),
-                            maxLines: 3,
-                            decoration: InputDecoration(
-                              filled: true,
-                              fillColor: Colors.white.withOpacity(0.05),
-                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
-                            ),
-                          )
-                        : Text(
-                            bio,
-                            style: const TextStyle(color: Colors.white, fontSize: 14, height: 1.5),
-                          );
-                    },
-                  ),
                 ],
               ),
             ),
@@ -212,12 +265,40 @@ class _ProfilePageState extends State<ProfilePage> {
             Row(
               children: [
                 _buildStatCard('REPUTACIÓN', '${user.reputationScore}', Icons.shield_outlined),
+                if (isOwnProfile) ...[
+                  const SizedBox(width: 12),
+                  _buildStatCard('BOLSA SYM', '${_balance.toInt()}', Icons.account_balance_wallet_outlined, isHighlight: true),
+                ],
                 const SizedBox(width: 12),
-                _buildStatCard('BOLSA SYM', '${_balance.toInt()}', Icons.account_balance_wallet_outlined, isHighlight: true),
-                const SizedBox(width: 12),
-                _buildStatCard('ARTÍCULOS', '0', Icons.article_outlined),
+                _buildStatCard('ARTÍCULOS', '$_articleCount', Icons.article_outlined),
               ],
             ),
+            
+            if (!isOwnProfile) ...[
+              const SizedBox(height: 32),
+              SizedBox(
+                width: double.infinity,
+                height: 56,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    developer.log('Iniciando comunicación con: ${user.uid}', name: 'SymmetrySocial');
+                    Navigator.pushNamed(context, '/ChatRoom', arguments: {
+                      'receiverId': user.uid,
+                      'receiverName': user.displayName,
+                    });
+                  },
+                  icon: const Icon(Icons.chat_bubble_outline),
+                  label: const Text('ESTABLECER COMUNICACIÓN (CHAT)', style: TextStyle(letterSpacing: 1.5, fontWeight: FontWeight.bold)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.black,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    elevation: 10,
+                    shadowColor: AppColors.primary.withOpacity(0.5),
+                  ),
+                ),
+              ),
+            ]
           ],
         ),
       ),

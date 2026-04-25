@@ -1,0 +1,5 @@
+# =============================================================================
+# Symmetry TeX Worker — Dependencies (extends base.txt)
+# NOTE: tectonic is installed at the system level in Dockerfile.tex
+# =============================================================================
+-r base.txt

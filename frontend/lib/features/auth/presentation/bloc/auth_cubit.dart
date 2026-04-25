@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:news_app_clean_architecture/features/auth/domain/entities/user.dart';
@@ -27,16 +28,35 @@ class AuthError extends AuthState {
 
 class AuthCubit extends Cubit<AuthState> {
   final AuthRepository _authRepository;
+  StreamSubscription<UserEntity?>? _profileSubscription;
 
   AuthCubit(this._authRepository) : super(AuthInitial()) {
     _authRepository.onAuthStateChanged.listen((user) {
       if (user != null) {
-        emit(Authenticated(user));
+        _subscribeToProfile(user);
       } else {
+        _profileSubscription?.cancel();
         emit(Unauthenticated());
       }
     });
   }
+
+  void _subscribeToProfile(UserEntity user) {
+    emit(Authenticated(user));
+    _profileSubscription?.cancel();
+    _profileSubscription = _authRepository.getUserProfile(user.uid).listen((userProfile) {
+      if (userProfile != null) {
+        emit(Authenticated(userProfile));
+      }
+    });
+  }
+
+  @override
+  Future<void> close() {
+    _profileSubscription?.cancel();
+    return super.close();
+  }
+
 
   Future<void> login(String email, String password) async {
     try {

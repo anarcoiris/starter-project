@@ -1,14 +1,14 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:news_app_clean_architecture/features/daily_news/data/data_sources/remote/chat_service.dart';
+import 'package:news_app_clean_architecture/features/daily_news/domain/usecases/get_chat_response.dart';
 import 'package:news_app_clean_architecture/core/analytics/analytics_repository.dart';
 import 'package:news_app_clean_architecture/features/daily_news/presentation/bloc/chat/chat_event.dart';
 import 'package:news_app_clean_architecture/features/daily_news/presentation/bloc/chat/chat_state.dart';
 
 class ChatBloc extends Bloc<ChatEvent, ChatState> {
-  final ChatService _chatService;
+  final GetChatResponseUseCase _getChatResponseUseCase;
   final AnalyticsRepository _analyticsRepository;
 
-  ChatBloc(this._chatService, this._analyticsRepository) : super(const ChatInitial()) {
+  ChatBloc(this._getChatResponseUseCase, this._analyticsRepository) : super(const ChatInitial()) {
     on<ChatMessageSent>(_onMessageSent);
     on<ChatHistoryCleared>(_onHistoryCleared);
   }
@@ -22,7 +22,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     emit(ChatLoading(updatedMessages));
 
     try {
-      final response = await _chatService.getChatResponse(event.message);
+      final response = await _getChatResponseUseCase(params: updatedMessages);
       
       final finalMessages = List<Map<String, String>>.from(updatedMessages)
         ..add({'role': 'assistant', 'content': response});

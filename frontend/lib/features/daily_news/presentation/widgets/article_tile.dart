@@ -45,7 +45,7 @@ class ArticleWidget extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildImage(context),
-              _buildContent(),
+              _buildContent(context),
             ],
           ),
         ),
@@ -98,6 +98,37 @@ class ArticleWidget extends StatelessWidget {
         ),
         Positioned(
           top: 12,
+          left: 12,
+          child: article!.pdfPath != null ? ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: BackdropFilter(
+              filter: ui.ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.7),
+                  borderRadius: BorderRadius.circular(10),
+                  boxShadow: [
+                    BoxShadow(color: AppColors.primary.withValues(alpha: 0.3), blurRadius: 8)
+                  ]
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.newspaper, size: 14, color: Colors.black),
+                    SizedBox(width: 6),
+                    Text(
+                      'ANARCOTIMES',
+                      style: TextStyle(color: Colors.black, fontSize: 10, fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ) : const SizedBox(),
+        ),
+        Positioned(
+          top: 12,
           right: 12,
           child: ClipRRect(
             borderRadius: BorderRadius.circular(10),
@@ -128,7 +159,41 @@ class ArticleWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildContent() {
+  Widget _buildAuthor(BuildContext context) {
+    final bool isUser = article!.authorId != null;
+    
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: isUser ? () {
+        developer.log('Navegando al perfil de: ${article!.authorId}', name: 'SymmetryUI');
+        Navigator.pushNamed(context, '/Profile', arguments: article!.authorId);
+      } : null,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
+        child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            isUser ? Icons.person_pin : Icons.person_outline,
+            size: 14,
+            color: isUser ? AppColors.primary : AppColors.textMuted,
+          ),
+          const SizedBox(width: 4),
+          Text(
+            article!.author ?? 'Anónimo',
+            style: TextStyle(
+              fontSize: 11,
+              color: isUser ? AppColors.primary : AppColors.textMuted,
+              fontWeight: isUser ? FontWeight.bold : FontWeight.normal,
+              decoration: isUser ? TextDecoration.underline : TextDecoration.none,
+            ),
+          ),
+        ],
+      ),
+    ));
+  }
+
+  Widget _buildContent(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
       child: Column(
@@ -143,15 +208,20 @@ class ArticleWidget extends StatelessWidget {
                   borderRadius: BorderRadius.circular(4),
                   border: Border.all(color: AppColors.primary.withValues(alpha: 0.5))
                 ),
-                child: const Text(
-                  'SYMMETRY NEWS',
-                  style: TextStyle(
+                child: Text(
+                  article!.source?.toUpperCase() ?? 'SYMMETRY NEWS',
+                  style: const TextStyle(
                     color: AppColors.primary,
                     fontSize: 8,
                     fontWeight: FontWeight.bold,
                     letterSpacing: 1,
                   ),
                 ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                _formatDate(article!.publishedAt),
+                style: const TextStyle(color: AppColors.textMuted, fontSize: 10),
               ),
               const Spacer(),
               if (isRemovable!)
@@ -188,13 +258,19 @@ class ArticleWidget extends StatelessWidget {
           const SizedBox(height: 16),
           Row(
             children: [
-              const Icon(Icons.today, size: 14, color: AppColors.textMuted),
-              const SizedBox(width: 6),
-              Text(
-                article!.publishedAt?.split('T')[0] ?? '',
-                style: const TextStyle(fontSize: 11, color: AppColors.textMuted),
-              ),
+              _buildAuthor(context),
               const Spacer(),
+              Row(
+                children: [
+                  const Icon(Icons.arrow_upward, size: 12, color: AppColors.success),
+                  const SizedBox(width: 2),
+                  Text(
+                    '${(article!.upvotes ?? 0) - (article!.downvotes ?? 0)}',
+                    style: const TextStyle(fontSize: 10, color: AppColors.textMuted, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+              const SizedBox(width: 12),
               const Icon(Icons.share_outlined, size: 16, color: AppColors.primary),
               if ((article!.tokensEarned ?? 0) > 0) ...[
                 const SizedBox(width: 12),
@@ -233,6 +309,25 @@ class ArticleWidget extends StatelessWidget {
   void _onRemove() {
     if (onRemove != null) {
       onRemove!(article!);
+    }
+  }
+
+  String _formatDate(String? dateStr) {
+    if (dateStr == null) return '';
+    try {
+      final date = DateTime.parse(dateStr);
+      final now = DateTime.now();
+      final difference = now.difference(date);
+
+      if (difference.inMinutes < 60) {
+        return 'Hace ${difference.inMinutes}m';
+      } else if (difference.inHours < 24) {
+        return 'Hace ${difference.inHours}h';
+      } else {
+        return '${date.day}/${date.month}/${date.year}';
+      }
+    } catch (e) {
+      return dateStr.split('T')[0];
     }
   }
 }

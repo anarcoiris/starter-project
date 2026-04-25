@@ -1,0 +1,17 @@
+# =============================================================================
+# Symmetry Backend — Shared Dependencies (pinned for reproducibility)
+# All services share this base. Profile-specific additions are in separate files.
+# =============================================================================
+
+# Database
+motor>=3.6.0
+
+# Configuration
+pydantic-settings==2.1.0
+python-dotenv==1.0.0
+
+# Event Streaming
+aiokafka==0.10.0
+
+# HTTP Client
+httpx==0.26.0

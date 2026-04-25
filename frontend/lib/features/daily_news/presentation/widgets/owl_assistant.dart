@@ -39,17 +39,19 @@ class _OwlAssistantState extends State<OwlAssistant> with SingleTickerProviderSt
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.pushNamed(context, '/OwlAssistant');
-      },
-      child: AnimatedOpacity(
-        opacity: widget.isVisible ? 1.0 : 0.0,
-        duration: const Duration(milliseconds: 500),
-        curve: Curves.easeInOut,
-        child: SlideTransition(
-          position: _offsetAnimation,
-        //child: FadeTransition(
+    return IgnorePointer(
+      ignoring: !widget.isVisible,
+      child: GestureDetector(
+        onTap: () {
+          Navigator.pushNamed(context, '/OwlAssistant');
+        },
+        child: AnimatedOpacity(
+          opacity: widget.isVisible ? 1.0 : 0.0,
+          duration: const Duration(milliseconds: 1500),
+          curve: Curves.easeInOut,
+          child: SlideTransition(
+            position: _offsetAnimation,
+          //child: FadeTransition(
         //opacity: _controller,
           child: Container(
             width: 280,
@@ -119,6 +121,7 @@ class _OwlAssistantState extends State<OwlAssistant> with SingleTickerProviderSt
             ),
           ),
         ),
+      ),
       ),
     );
   }

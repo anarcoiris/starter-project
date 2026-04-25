@@ -14,8 +14,10 @@ logging.basicConfig(
 logger = logging.getLogger("SymmetryAPI")
 
 from app.core.config import settings
-from app.mongo_schema import initialize_mongo_schema
-from app.api.v1.endpoints import articles, ollama, ingest, rewards, debug
+from app.core.database import initialize_mongo_schema
+from app.api.v1.endpoints import articles, ollama, ingest, rewards, debug, users
+
+from aiokafka import AIOKafkaProducer
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -28,14 +30,22 @@ async def lifespan(app: FastAPI):
     await app.state.motor_client.admin.command("ping")
     logger.info("MongoDB Connection Verified.")
     
+    # Initialize Kafka Producer
+    app.state.producer = AIOKafkaProducer(
+        bootstrap_servers=settings.kafka_bootstrap_servers
+    )
+    await app.state.producer.start()
+    logger.info("Kafka Producer Initialized.")
+    
     # Initialize schema/indexes
     await initialize_mongo_schema(app.state.db)
     logger.info("Schema Initialization Complete.")
     
     yield
     
-    # Shutdown: Close connection
+    # Shutdown: Close connections
     logger.info("Shutting down Nexus Systems...")
+    await app.state.producer.stop()
     app.state.motor_client.close()
 
 from fastapi.middleware.cors import CORSMiddleware
@@ -48,10 +58,16 @@ app = FastAPI(
     openapi_url="/api/openapi.json"
 )
 
-# Enable CORS for professional interoperability
+# Enable CORS with restricted origins
+allowed_origins = [
+    "https://uncovernews.ddns.net",
+    "http://localhost:3000",
+    "http://localhost:8000",
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=allowed_origins if not settings.debug_mode else ["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -77,9 +93,20 @@ api_router.include_router(articles.router, prefix="/articles", tags=["Articles"]
 api_router.include_router(ollama.router, prefix="/ollama", tags=["Ollama"])
 api_router.include_router(ingest.router, prefix="/ingest", tags=["Ingestion"])
 api_router.include_router(rewards.router, prefix="/rewards", tags=["Rewards"])
-api_router.include_router(debug.router, prefix="/debug", tags=["Debug & Diagnostics"])
+api_router.include_router(users.router, prefix="/users", tags=["Users"])
+
+# Only include debug endpoints in debug mode
+if settings.debug_mode:
+    logger.warning("DEBUG MODE ACTIVE: Exposing diagnostic endpoints.")
+    api_router.include_router(debug.router, prefix="/debug", tags=["Debug & Diagnostics"])
 
 app.include_router(api_router)
+
+# --- Metrics Instrumentation ---
+from prometheus_fastapi_instrumentator import Instrumentator
+Instrumentator().instrument(app).expose(app, endpoint="/metrics", tags=["System"])
+
+
 
 @app.get("/health")
 async def health():

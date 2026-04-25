@@ -5,6 +5,7 @@ import 'package:news_app_clean_architecture/core/constants/constants.dart';
 import 'package:news_app_clean_architecture/features/daily_news/data/data_sources/local/app_database.dart';
 import 'package:news_app_clean_architecture/features/daily_news/data/models/article.dart';
 import 'package:news_app_clean_architecture/core/resources/data_state.dart';
+import 'package:news_app_clean_architecture/core/resources/failure.dart';
 import 'package:news_app_clean_architecture/features/daily_news/domain/entities/article.dart';
 import 'package:news_app_clean_architecture/features/daily_news/domain/repository/article_repository.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -28,10 +29,8 @@ class ArticleRepositoryImpl implements ArticleRepository {
    try {
      developer.log('Solicitando artículos al backend local/remoto... Categoría: $category', name: 'SymmetryArticles');
      final httpResponse = await _newsApiService.getNewsArticles(
-       apiKey: newsAPIKey,
-       country: countryQuery,
-       category: category ?? categoryQuery,
-     );
+        category: category ?? categoryQuery,
+      );
 
 
      if (httpResponse.response.statusCode == HttpStatus.ok) {
@@ -52,10 +51,7 @@ class ArticleRepositoryImpl implements ArticleRepository {
       final articles = await _firebaseDataSource.getArticles();
       return DataSuccess(articles);
     } catch (e) {
-      return DataFailed(DioException(
-        error: "Both Local and Firebase backends are unavailable",
-        requestOptions: RequestOptions(path: 'articles')
-      ));
+      return const DataFailed(ServerFailure("Both Local and Firebase backends are unavailable"));
     }
   }
 
@@ -82,10 +78,7 @@ class ArticleRepositoryImpl implements ArticleRepository {
         return DataSuccess(null);
       } catch (firebaseError) {
         developer.log('FALLO TOTAL: No se pudo publicar en ninguna plataforma: $firebaseError', name: 'SymmetryArticles');
-        return DataFailed(DioException(
-          error: "Error crítico: Fallo en API y Firebase. Revisa conexión y logs de Storage.",
-          requestOptions: RequestOptions(path: 'articles')
-        ));
+        return const DataFailed(ServerFailure("Error crítico: Fallo en API y Firebase. Revisa conexión y logs de Storage."));
       }
     }
   }
@@ -104,5 +97,32 @@ class ArticleRepositoryImpl implements ArticleRepository {
   @override
   Future<void> saveArticle(ArticleEntity article) {
     return _appDatabase.articleDAO.insertArticle(ArticleModel.fromEntity(article));
+  }
+
+  @override
+  Future<DataState<void>> voteArticle(String articleId, String userId, bool isUpvote) async {
+    try {
+      final vote = isUpvote ? 'up' : 'down';
+      final httpResponse = await _newsApiService.voteArticle(articleId, userId, vote);
+      if (httpResponse.response.statusCode == HttpStatus.ok) {
+        return DataSuccess(null);
+      }
+      return DataFailed(ServerFailure("Vote failed with status ${httpResponse.response.statusCode}"));
+    } catch (e) {
+      return DataFailed(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<DataState<String>> generateDailyNewspaper() async {
+    try {
+      final httpResponse = await _newsApiService.generateDailyNewspaper();
+      if (httpResponse.response.statusCode == HttpStatus.ok) {
+        return DataSuccess(httpResponse.data['articleId'] as String);
+      }
+      return DataFailed(ServerFailure("Generation failed with status ${httpResponse.response.statusCode}"));
+    } catch (e) {
+      return DataFailed(ServerFailure(e.toString()));
+    }
   }
 }

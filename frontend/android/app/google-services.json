@@ -1,26 +1,44 @@
 {
   "project_info": {
-    "project_number": "574300077165",
-    "project_id": "uncover-news-9e08a",
-    "storage_bucket": "uncover-news-9e08a.firebasestorage.app"
+    "project_number": "570726082445",
+    "project_id": "uncover-news-65751",
+    "storage_bucket": "uncover-news-65751.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:574300077165:android:7d1056cee8c2f2c0ef5364",
+        "mobilesdk_app_id": "1:570726082445:android:773cb5aba0c9c190d8bfc4",
         "android_client_info": {
-          "package_name": "com.company.uncover_news"
+          "package_name": "com.anarcoiris.uncovernews"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "570726082445-n01s4c1fp8t71l4b1e86ubsrcnbnni9h.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.anarcoiris.uncovernews",
+            "certificate_hash": "f3d900b4e3c28f3f798a32af650e891ae61a7836"
+          }
+        },
+        {
+          "client_id": "570726082445-8c0qkadlb9pckn29g43hnkn2sfh5r69c.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
-          "current_key": "AIzaSyDqurn-r_gWecN1cp_8ldlLLN69jv39aBE"
+          "current_key": "AIzaSyASp1CN4H2sSl0T08_8027sElLiSN0a9s4"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "570726082445-8c0qkadlb9pckn29g43hnkn2sfh5r69c.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

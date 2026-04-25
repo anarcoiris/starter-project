@@ -1,0 +1,2 @@
+# DEPRECATED: Moved to requirements/api.txt
+-r requirements/api.txt

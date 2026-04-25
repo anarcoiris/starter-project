@@ -11,8 +11,11 @@ import 'package:news_app_clean_architecture/features/daily_news/presentation/blo
 import 'package:news_app_clean_architecture/features/daily_news/presentation/bloc/article/local/local_article_event.dart';
 
 import 'package:news_app_clean_architecture/core/constants/constants.dart';
+import 'package:news_app_clean_architecture/features/auth/presentation/bloc/auth_cubit.dart';
 import 'package:news_app_clean_architecture/features/daily_news/presentation/bloc/reward/reward_cubit.dart';
+import 'package:news_app_clean_architecture/features/daily_news/domain/usecases/vote_article.dart';
 import 'package:news_app_clean_architecture/features/daily_news/presentation/bloc/reward/reward_state.dart';
+
 
 class ArticleDetailsView extends HookWidget {
   final ArticleEntity? article;
@@ -66,7 +69,15 @@ class ArticleDetailsView extends HookWidget {
   }
 
   void _claimReward(BuildContext context, double duration) {
-    context.read<RewardCubit>().claimReward(kAlphaTesterId, article?.url ?? '', duration);
+    // Get real userId from AuthCubit
+    final authState = context.read<AuthCubit>().state;
+    String userId = 'anonymous';
+    if (authState is Authenticated) {
+      userId = authState.user.uid;
+    }
+
+    context.read<RewardCubit>().claimReward(userId, article?.url ?? '', duration);
+
   }
 
   PreferredSizeWidget _buildAppBar(BuildContext context) {
@@ -91,7 +102,7 @@ class ArticleDetailsView extends HookWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildRewardStatus(),
-          _buildArticleTitleAndDate(),
+          _buildArticleTitleAndDate(context),
           _buildArticleImage(),
           _buildArticleContent(context),
           const SizedBox(height: 100),
@@ -100,7 +111,7 @@ class ArticleDetailsView extends HookWidget {
     );
   }
 
-  Widget _buildArticleTitleAndDate() {
+  Widget _buildArticleTitleAndDate(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 10),
       child: Column(
@@ -117,11 +128,25 @@ class ArticleDetailsView extends HookWidget {
           const SizedBox(height: 16),
           Row(
             children: [
-              const Icon(Ionicons.person_circle_outline, size: 20, color: AppColors.primary),
-              const SizedBox(width: 6),
-              Text(
-                article?.author ?? 'Periodista Symmetry',
-                style: const TextStyle(fontSize: 14, color: Colors.white70, fontWeight: FontWeight.w600),
+              GestureDetector(
+                onTap: article?.authorId != null ? () {
+                  Navigator.pushNamed(context, '/Profile', arguments: article!.authorId);
+                } : null,
+                child: Row(
+                  children: [
+                    const Icon(Ionicons.person_circle_outline, size: 20, color: AppColors.primary),
+                    const SizedBox(width: 6),
+                    Text(
+                      article?.author ?? 'Periodista Symmetry',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: article?.authorId != null ? AppColors.primary : Colors.white70,
+                        fontWeight: FontWeight.w600,
+                        decoration: article?.authorId != null ? TextDecoration.underline : TextDecoration.none,
+                      ),
+                    ),
+                  ],
+                ),
               ),
               const Spacer(),
               const Icon(Ionicons.time_outline, size: 16, color: AppColors.textMuted),
@@ -132,9 +157,69 @@ class ArticleDetailsView extends HookWidget {
               ),
             ],
           ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              _buildVoteButton(context, Ionicons.caret_up, AppColors.success, (article?.upvotes ?? 0).toString(), true),
+              const SizedBox(width: 16),
+              _buildVoteButton(context, Ionicons.caret_down, AppColors.highlight, (article?.downvotes ?? 0).toString(), false),
+              const Spacer(),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  'Score: ${((article?.upvotes ?? 0) - (article?.downvotes ?? 0))}',
+                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+                ),
+              ),
+            ],
+          ),
           const Divider(height: 32, color: Colors.white10),
         ],
       ),
+    );
+  }
+
+  Widget _buildVoteButton(BuildContext context, IconData icon, Color color, String count, bool isUpvote) {
+    return StatefulBuilder(
+      builder: (context, setState) {
+        bool voted = false;
+        return GestureDetector(
+          onTap: () async {
+            if (!voted) {
+              setState(() => voted = true);
+              final authState = context.read<AuthCubit>().state;
+              if (authState is Authenticated && article?.articleId != null) {
+                try {
+                  await sl<VoteArticleUseCase>().call(
+                    params: VoteParams(
+                      articleId: article!.articleId!, 
+                      userId: authState.user.uid, 
+                      isUpvote: isUpvote
+                    )
+                  );
+                } catch (e) {
+                  // Revert if error
+                  setState(() => voted = false);
+                }
+              }
+            }
+          },
+          child: Row(
+            children: [
+              Icon(icon, color: voted ? color : Colors.white54, size: 24),
+              const SizedBox(width: 4),
+              Text(
+                voted ? (int.parse(count) + 1).toString() : count,
+                style: TextStyle(color: voted ? color : Colors.white54, fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+        );
+      }
     );
   }
 

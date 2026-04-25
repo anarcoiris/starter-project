@@ -16,8 +16,44 @@ class AuthRepositoryImpl implements AuthRepository {
   UserEntity? get currentUser => _mapFirebaseUser(_firebaseAuth.currentUser);
 
   @override
+  Stream<UserEntity?> getUserProfile(String uid) {
+    return FirebaseFirestore.instance.collection('users').doc(uid).snapshots().map((snapshot) {
+      final data = snapshot.data();
+      if (data == null) return null;
+      
+      return UserEntity(
+        uid: uid,
+        email: data['email'],
+        displayName: data['displayName'],
+        photoUrl: data['photoUrl'],
+        bio: data['bio'],
+        reputationScore: (data['reputation'] as num?)?.toInt() ?? 0,
+        isVerified: data['isVerified'] ?? false,
+      );
+    });
+  }
+
+  @override
+  Future<UserEntity?> getPublicProfile(String uid) async {
+    final doc = await FirebaseFirestore.instance.collection('users').doc(uid).get();
+    final data = doc.data();
+    if (data == null) return null;
+
+    return UserEntity(
+      uid: uid,
+      email: data['email'],
+      displayName: data['displayName'],
+      photoUrl: data['photoUrl'],
+      bio: data['bio'],
+      reputationScore: (data['reputation'] as num?)?.toInt() ?? 0,
+      isVerified: data['isVerified'] ?? false,
+    );
+  }
+
+  @override
   Future<UserEntity?> login({required String email, required String password}) async {
     final credential = await _firebaseAuth.signInWithEmailAndPassword(
+
       email: email,
       password: password,
     );
@@ -30,10 +66,20 @@ class AuthRepositoryImpl implements AuthRepository {
       email: email,
       password: password,
     );
+    final user = credential.user;
     if (displayName != null) {
-      await credential.user?.updateDisplayName(displayName);
+      await user?.updateDisplayName(displayName);
     }
-    return _mapFirebaseUser(credential.user);
+    
+    if (user != null) {
+      await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+        'email': user.email,
+        'displayName': displayName,
+        'createdAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+    }
+    
+    return _mapFirebaseUser(user);
   }
 
   @override
@@ -50,7 +96,18 @@ class AuthRepositoryImpl implements AuthRepository {
     );
 
     final userCredential = await _firebaseAuth.signInWithCredential(credential);
-    return _mapFirebaseUser(userCredential.user);
+    final user = userCredential.user;
+    
+    if (user != null) {
+      await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+        'email': user.email,
+        'displayName': user.displayName ?? googleUser.displayName,
+        'photoUrl': user.photoURL ?? googleUser.photoUrl,
+        'lastLoginAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+    }
+    
+    return _mapFirebaseUser(user);
   }
 
   @override

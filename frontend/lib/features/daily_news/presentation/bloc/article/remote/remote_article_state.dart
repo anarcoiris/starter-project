@@ -1,10 +1,10 @@
 import 'package:equatable/equatable.dart';
-import 'package:dio/dio.dart';
+import 'package:news_app_clean_architecture/core/resources/failure.dart';
 import 'package:news_app_clean_architecture/features/daily_news/domain/entities/article.dart';
 
 abstract class RemoteArticlesState extends Equatable {
   final List<ArticleEntity> ? articles;
-  final DioException ? error;
+  final Failure ? error;
   
   const RemoteArticlesState({this.articles,this.error});
   
@@ -21,7 +21,7 @@ class RemoteArticlesDone extends RemoteArticlesState {
 }
 
 class RemoteArticlesError extends RemoteArticlesState {
-  const RemoteArticlesError(DioException error) : super(error: error);
+  const RemoteArticlesError(Failure error) : super(error: error);
 }
 
 // Write Operations States
@@ -34,5 +34,5 @@ class PostArticleSuccess extends RemoteArticlesState {
 }
 
 class PostArticleError extends RemoteArticlesState {
-  const PostArticleError(DioException error) : super(error: error);
+  const PostArticleError(Failure error) : super(error: error);
 }

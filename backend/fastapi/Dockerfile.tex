@@ -1,0 +1,34 @@
+FROM python:3.12-slim
+
+# Install system dependencies
+RUN apt-get update && apt-get install -u -y \
+    curl \
+    wget \
+    xz-utils \
+    libfontconfig1 \
+    libgraphite2-3 \
+    libharfbuzz0b \
+    libicu-dev \
+    libssl-dev \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Tectonic from GitHub Releases (more reliable than the installer script)
+# Version 0.15.0
+RUN wget https://github.com/tectonic-typesetting/tectonic/releases/download/tectonic%400.15.0/tectonic-0.15.0-x86_64-unknown-linux-musl.tar.gz \
+    && tar -xzf tectonic-0.15.0-x86_64-unknown-linux-musl.tar.gz \
+    && mv tectonic /usr/local/bin/ \
+    && rm tectonic-0.15.0-x86_64-unknown-linux-musl.tar.gz
+
+WORKDIR /app
+
+# Use optimized requirements
+COPY requirements/ ./requirements/
+RUN pip install --no-cache-dir -r requirements/tex.txt
+
+COPY . .
+
+# Ensure the app directory is treatable as a package
+ENV PYTHONPATH=/app
+
+CMD ["python", "-m", "app.workers.tex_worker"]

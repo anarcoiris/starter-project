@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any, Optional
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
@@ -24,7 +24,7 @@ class CacheRepository:
                 {
                     "$set": {
                         "response": response,
-                        "timestamp": datetime.now()
+                        "timestamp": datetime.now(timezone.utc)
                     }
                 },
                 upsert=True

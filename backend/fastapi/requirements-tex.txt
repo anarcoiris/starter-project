@@ -1,0 +1,2 @@
+# DEPRECATED: Moved to requirements/tex.txt
+-r requirements/tex.txt

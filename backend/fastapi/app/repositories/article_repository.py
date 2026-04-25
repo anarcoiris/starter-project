@@ -19,26 +19,74 @@ class ArticleRepository:
         return [Article(**item) for item in items]
 
 
-    async def create(self, article: ArticleCreate) -> Article:
-        doc = article.model_dump()
-        logger.debug(f"Saving document to Mongo: {doc}")
+    async def create(self, article: Article) -> Article:
+        # Debugging: check what type we actually received
+        logger.debug(f"Repository creating article of type: {type(article)}")
+        
         try:
+            # Handle both Pydantic models and dictionaries
+            if hasattr(article, "model_dump"):
+                doc = article.model_dump()
+                article_id = getattr(article, "articleId", doc.get("articleId"))
+            else:
+                doc = dict(article)
+                article_id = doc.get("articleId")
+
+            if not article_id:
+                # Fallback: maybe it's in the doc but was called incorrectly
+                article_id = doc.get("articleId")
+            
+            if not article_id:
+                raise AttributeError(f"Object of type {type(article)} has no articleId field")
+
+            logger.debug(f"Saving document to Mongo: {doc}")
+            
             # Ensure publishedAt is a datetime and not a string
             if isinstance(doc.get("publishedAt"), str):
                 from datetime import datetime
                 doc["publishedAt"] = datetime.fromisoformat(doc["publishedAt"].replace("Z", "+00:00"))
             
             await self.collection.update_one(
-                {"articleId": article.articleId},
+                {"articleId": article_id},
                 {"$set": doc},
                 upsert=True
             )
             return Article(**doc)
         except Exception as e:
-            logger.error(f"MongoDB Error: {e}")
+            logger.error(f"MongoDB Error in repository: {e} (Type: {type(article)})")
             raise
 
     async def get_by_id(self, article_id: str) -> Optional[Article]:
         doc = await self.collection.find_one({"articleId": article_id}, {"_id": 0})
         return Article(**doc) if doc else None
 
+    async def increment_read_metrics(self, article_id: str, read_time: int):
+        """Atomically increment views and total read time."""
+        await self.collection.update_one(
+            {"articleId": article_id},
+            {
+                "$inc": {
+                    "views": 1,
+                    "readTime": read_time,
+                    "verifiedImpressionCount": 1
+                }
+            }
+        )
+
+    async def update_pdf_path(self, article_id: str, pdf_path: str):
+        """Update the pdfPath field for a specific article."""
+        await self.collection.update_one(
+            {"articleId": article_id},
+            {"$set": {"pdfPath": pdf_path}}
+        )
+
+    async def update_votes(self, article_id: str, up_change: int, down_change: int):
+        await self.collection.update_one(
+            {"articleId": article_id},
+            {
+                "$inc": {
+                    "upvotes": up_change,
+                    "downvotes": down_change
+                }
+            }
+        )

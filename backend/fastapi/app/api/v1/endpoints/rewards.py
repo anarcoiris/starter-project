@@ -1,16 +1,9 @@
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends
 from app.models.reward import ClaimRequest
 from app.services.reward_service import RewardService
-from app.repositories.reward_repository import RewardRepository
-from app.repositories.article_repository import ArticleRepository
+from app.api.deps import get_reward_service
 
 router = APIRouter()
-
-def get_reward_service(request: Request) -> RewardService:
-    db = request.app.state.db
-    reward_repo = RewardRepository(db)
-    article_repo = ArticleRepository(db)
-    return RewardService(reward_repo, article_repo)
 
 @router.post("/claim")
 async def claim_reward(request: ClaimRequest, service: RewardService = Depends(get_reward_service)):
@@ -27,3 +20,17 @@ async def get_balance(user_id: str, service: RewardService = Depends(get_reward_
     Get current off-chain SYM token balance.
     """
     return await service.get_balance(user_id)
+
+@router.post("/airdrop/{user_id}")
+async def trigger_airdrop(user_id: str, service: RewardService = Depends(get_reward_service)):
+    """
+    Manually trigger airdrop for a specific user (First 1,000 only).
+    """
+    return await service.process_airdrop(user_id)
+
+@router.post("/init-custodian")
+async def init_custodian(amount: float = 1000000.0, service: RewardService = Depends(get_reward_service)):
+    """
+    Initialize the custodian account with pre-mined tokens.
+    """
+    return await service.initialize_custodian(amount)

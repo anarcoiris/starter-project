@@ -13,4 +13,8 @@ abstract class ArticleRepository {
 
   // Journalist methods
   Future<DataState<void>> postArticle(ArticleEntity article);
-}
+
+  // Interaction methods
+  Future<DataState<void>> voteArticle(String articleId, String userId, bool isUpvote);
+  Future<DataState<String>> generateDailyNewspaper();
+}

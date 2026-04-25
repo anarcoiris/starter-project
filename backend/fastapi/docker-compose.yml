@@ -1,28 +1,63 @@
 services:
   mongodb:
     image: mongo:7
-    # Removed direct host port exposure for security: "just api" access requested.
+    container_name: symmetry_mongodb
     volumes:
       - symmetry_mongo_data:/data/db
+    restart: unless-stopped
+
+  mongo-express:
+    image: mongo-express:latest
+    container_name: symmetry_mongo_express
+    ports:
+      - "8081:8081"
+    environment:
+      ME_CONFIG_MONGODB_SERVER: mongodb
+      ME_CONFIG_MONGODB_PORT: 27017
+      ME_CONFIG_BASICAUTH_USERNAME: admin
+      ME_CONFIG_BASICAUTH_PASSWORD: symmetry_pass
+    depends_on:
+      - mongodb
+    restart: unless-stopped
 
   ollama:
     image: ollama/ollama:latest
     container_name: symmetry_ollama
     volumes:
       - symmetry_ollama_data:/root/.ollama
-    # No ports exposed to host. Access via API proxy.
+    environment:
+      - OLLAMA_MAX_LOADED_MODELS=1
+      - OLLAMA_KEEP_ALIVE=5m
+      - OLLAMA_DEBUG=1
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [ gpu ]
+        limits:
+          memory: 8G
+    restart: unless-stopped
 
+  # ── Core API ──────────────────────────────────────────────────────────────
   api:
-    build: .
+    build:
+      context: .
+      args:
+        REQS_FILE: requirements/api.txt
+    container_name: symmetry_api
     volumes:
       - .:/app
     environment:
       MONGODB_URL: mongodb://mongodb:27017
       MONGODB_DB_NAME: symmetry
       OLLAMA_HOST: http://ollama:11434
+      KAFKA_BOOTSTRAP_SERVERS: redpanda:9092
     depends_on:
       - mongodb
       - ollama
+      - redpanda
 
   caddy:
     image: caddy:2-alpine
@@ -33,8 +68,142 @@ services:
       - ./Caddyfile:/etc/caddy/Caddyfile
       - caddy_data:/data
       - caddy_config:/config
+      - ./exports/pdfs:/app/exports/pdfs:ro
     depends_on:
       - api
+
+  ollama-init:
+    image: curlimages/curl:latest
+    container_name: symmetry_ollama_init
+    volumes:
+      - ./scripts/init_ollama.sh:/init_ollama.sh
+    entrypoint: ["/bin/sh", "/init_ollama.sh"]
+    depends_on:
+      - ollama
+
+  # ── Active Workers (RSS + TeX) ────────────────────────────────────────────
+  worker-ingest:
+    build:
+      context: .
+      args:
+        REQS_FILE: requirements/ingest.txt
+    container_name: symmetry_worker_ingest
+    command: python -m app.workers.ingest_worker
+    environment:
+      MONGODB_URL: mongodb://mongodb:27017
+      MONGODB_DB_NAME: symmetry
+      OLLAMA_HOST: http://ollama:11434
+      KAFKA_BOOTSTRAP_SERVERS: redpanda:9092
+    depends_on:
+      - mongodb
+      - ollama
+      - redpanda
+    restart: unless-stopped
+
+  worker-tex:
+    build:
+      context: .
+      dockerfile: Dockerfile.tex
+    container_name: symmetry_worker_tex
+    environment:
+      MONGODB_URL: mongodb://mongodb:27017
+      MONGODB_DB_NAME: symmetry
+      OLLAMA_HOST: http://ollama:11434
+      KAFKA_BOOTSTRAP_SERVERS: redpanda:9092
+    depends_on:
+      - mongodb
+      - ollama
+      - redpanda
+    volumes:
+      - ./exports/pdfs:/app/exports/pdfs
+    restart: unless-stopped
+
+  # ── Twitter Pipeline (dormant — activate with: docker compose --profile twitter up)
+  worker-twitter:
+    build: .
+    container_name: symmetry_worker_twitter
+    entrypoint: ["python", "-m", "app.workers.twitter_worker"]
+    env_file: .env
+    depends_on:
+      - redpanda
+    profiles: ["twitter"]
+
+  worker-analysis:
+    build: .
+    container_name: symmetry_worker_analysis
+    entrypoint: ["python", "-m", "app.workers.analysis_worker"]
+    env_file: .env
+    depends_on:
+      - redpanda
+      - ollama
+    profiles: ["twitter"]
+
+  worker-mongo:
+    build: .
+    container_name: symmetry_worker_mongo
+    entrypoint: ["python", "-m", "app.workers.mongo_sink"]
+    env_file: .env
+    restart: unless-stopped
+    depends_on:
+      - redpanda
+      - mongodb
+    profiles: ["twitter"]
+
+  # ── Event Streaming (Redpanda) ────────────────────────────────────────────
+  redpanda:
+    image: docker.redpanda.com/redpandadata/redpanda:v23.2.14
+    container_name: symmetry_redpanda
+    command:
+      - redpanda
+      - start
+      - --smp 1
+      - --memory 1G
+      - --reserve-memory 0M
+      - --overprovisioned
+      - --node-id 0
+      - --kafka-addr INTERNAL://0.0.0.0:9092,OUTSIDE://0.0.0.0:19092
+      - --advertise-kafka-addr INTERNAL://redpanda:9092,OUTSIDE://localhost:19092
+      - --pandaproxy-addr 0.0.0.0:8082
+      - --advertise-pandaproxy-addr localhost:8082
+    ports:
+      - "19092:19092"
+      - "8082:8082"
+      - "9644:9644"
+
+  console:
+    image: docker.redpanda.com/redpandadata/console:v2.3.8
+    container_name: symmetry_console
+    entrypoint: /bin/sh
+    command:
+      - -c
+      - |
+        echo "kafka:
+          brokers: [\"redpanda:9092\"]" > /tmp/config.yml
+        /app/console --config.filepath /tmp/config.yml
+
+    ports:
+      - "8080:8080"
+    depends_on:
+      - redpanda
+
+  # ── Monitoring ────────────────────────────────────────────────────────────
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: symmetry_prometheus
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9090:9090"
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: symmetry_grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    depends_on:
+      - prometheus
 
 volumes:
   symmetry_mongo_data:

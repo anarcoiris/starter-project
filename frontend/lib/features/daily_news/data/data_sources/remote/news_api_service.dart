@@ -49,4 +49,28 @@ class NewsApiService {
       rethrow;
     }
   }
+
+  Future<HttpResponse<Map<String, dynamic>>> voteArticle(String articleId, String userId, String vote) async {
+    try {
+      final response = await _dio.post(
+        'articles/$articleId/vote',
+        data: {
+          'userId': userId,
+          'vote': vote,
+        },
+      );
+      return HttpResponse(response.data as Map<String, dynamic>, response);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<HttpResponse<Map<String, dynamic>>> generateDailyNewspaper() async {
+    try {
+      final response = await _dio.post('articles/generate-daily');
+      return HttpResponse(response.data as Map<String, dynamic>, response);
+    } catch (e) {
+      rethrow;
+    }
+  }
 }

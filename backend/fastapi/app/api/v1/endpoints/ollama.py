@@ -3,12 +3,10 @@ import hashlib
 import json
 from fastapi import APIRouter, Request, Response, Depends
 from app.core.config import settings
+from app.api.deps import get_cache_repository
 from app.repositories.cache_repository import CacheRepository
 
 router = APIRouter()
-
-def get_cache_repository(request: Request) -> CacheRepository:
-    return CacheRepository(request.app.state.db)
 
 @router.api_route("/{path:path}", methods=["GET", "POST", "PUT", "DELETE"])
 async def proxy_ollama(path: str, request: Request, cache: CacheRepository = Depends(get_cache_repository)):
@@ -50,12 +48,10 @@ async def proxy_ollama(path: str, request: Request, cache: CacheRepository = Dep
         if should_cache and response.status_code == 200:
             try:
                 resp_json = response.json()
-                # Create cache key again (to be sure)
-                cache_input = f"{path}|{content.decode()}"
-                cache_key = hashlib.md5(cache_input.encode()).hexdigest()
                 await cache.set(cache_key, resp_json)
-            except:
-                pass
+            except Exception as e:
+                import logging
+                logging.getLogger(__name__).warning(f"Failed to cache Ollama response: {e}")
         
         # Return response to client
         return Response(

@@ -2,20 +2,24 @@ import feedparser
 import httpx
 import logging
 from bs4 import BeautifulSoup
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional
 import hashlib
+import json
+from aiokafka import AIOKafkaProducer
+from newspaper import Article as NArticle
 from app.repositories.article_repository import ArticleRepository
 from app.repositories.cache_repository import CacheRepository
-from app.models.article import ArticleCreate
+from app.models.article import Article, ArticleCreate
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
 class IngestionService:
-    def __init__(self, repository: ArticleRepository, cache: CacheRepository):
+    def __init__(self, repository: ArticleRepository, cache: CacheRepository, producer: Optional[AIOKafkaProducer] = None):
         self.repository = repository
         self.cache = cache
+        self.producer = producer
         self.sources = [
             {"name": "TechCrunch", "url": "https://techcrunch.com/feed/"},
             {"name": "Google News Tech", "url": "https://news.google.com/rss/search?q=technology&hl=en-US&gl=US&ceid=US:en"},
@@ -38,10 +42,11 @@ class IngestionService:
     async def _ingest_source(self, client: httpx.AsyncClient, source: dict) -> int:
         response = await client.get(source["url"])
         feed = feedparser.parse(response.text)
+        logger.info(f"Source {source['name']} returned {len(feed.entries)} entries.")
         
         new_articles = 0
-        # Limit to 5 per source for demo/performance
-        for entry in feed.entries[:8]:
+        # Limit to 25 per source for richer content
+        for entry in feed.entries[:25]:
             article_id = entry.get("id", entry.link)
             
             # Check if exists
@@ -53,16 +58,50 @@ class IngestionService:
             article_data = await self._process_entry(client, entry, source["name"])
             if article_data:
                 await self.repository.create(article_data)
+                
+                # TRIGGER PDF GENERATION
+                if self.producer:
+                    try:
+                        # We send the dictionary representation of the article
+                        # Article model has a convenient .dict() or .model_dump()
+                        message = article_data.model_dump()
+                        # Convert datetime to string for JSON serialization
+                        message['publishedAt'] = message['publishedAt'].isoformat()
+                        
+                        await self.producer.send_and_wait(
+                            "tex_rendering_queue",
+                            json.dumps(message).encode("utf-8")
+                        )
+                        logger.info(f"PDF rendering task queued for: {article_data.title}")
+                    except Exception as e:
+                        logger.error(f"Failed to queue PDF task: {e}")
+
                 new_articles += 1
                 
         return new_articles
 
-    async def _process_entry(self, client: httpx.AsyncClient, entry, source_name: str) -> Optional[ArticleCreate]:
+    async def _process_entry(self, client: httpx.AsyncClient, entry, source_name: str) -> Optional[Article]:
         title = entry.title
+        # Fallback if Newspaper fails
         summary_html = entry.get("summary", "") or entry.get("description", "")
         soup = BeautifulSoup(summary_html, "html.parser")
         description = soup.get_text()
-        content = description # RSS usually only has summary
+        content = description
+        url_to_image = None
+        
+        # Try newspaper3k to get full text
+        try:
+            n_article = NArticle(entry.link)
+            n_article.download()
+            n_article.parse()
+            if n_article.text and len(n_article.text) > 50:
+                content = n_article.text
+                if not description:
+                    description = content[:200] + "..."
+            if n_article.top_image:
+                url_to_image = n_article.top_image
+        except Exception as e:
+            logger.warning(f"Newspaper3k failed for {entry.link}: {e}")
         
         # 1. AI Refactoring with Ollama + Cache
         refactored = await self._refactor_with_ai(client, title, description)
@@ -85,7 +124,7 @@ class IngestionService:
                     url_to_image = enc.get("url")
                     break
 
-        # Method C: Parse from HTML summary/content
+        # Method B: Parse from HTML summary/content
         if not url_to_image:
             img_tag = soup.find("img")
             if img_tag and img_tag.get("src"):
@@ -104,11 +143,11 @@ class IngestionService:
             idx = hash(title) % len(fallbacks)
             url_to_image = fallbacks[idx]
 
-        published_at = datetime.now()
+        published_at = datetime.now(timezone.utc)
         if entry.get("published_parsed"):
             published_at = datetime(*entry.published_parsed[:6])
 
-        return ArticleCreate(
+        return Article(
             articleId=entry.get("id", entry.link),
             author=f"AI Journalist ({source_name})",
             title=final_title,
@@ -118,7 +157,7 @@ class IngestionService:
             publishedAt=published_at,
             content=content,
             source=source_name,
-            category="Technology"
+            category="technology"
         )
 
     async def _refactor_with_ai(self, client: httpx.AsyncClient, title: str, description: str) -> dict:
@@ -135,9 +174,12 @@ class IngestionService:
         logger.info(f"Cache MISS for AI refactor: {title[:30]}...")
         
         prompt = f"""
-        Eres un periodista de élite de Symmetry. Reescribe el siguiente título y descripción de noticia para que sea técnico, elegante y con un toque futurista. 
-        Mantén la veracidad pero mejora el impacto. 
-        Responde ÚNICAMENTE en formato JSON con los campos 'title' y 'description'.
+        Eres un periodista de tecnología de alto nivel. Reescribe el siguiente título y descripción EN ESPAÑOL para que suenen más profesionales, concisos y elegantes, manteniendo un tono de innovación.
+        IMPORTANTE: 
+        1. Mantén estrictamente la veracidad de la noticia.
+        2. NO añadas nombres de empresas o eventos que no estén en el original (como 'Symmetry').
+        3. El resultado debe estar íntegramente en ESPAÑOL.
+        4. Responde ÚNICAMENTE en formato JSON con los campos 'title' y 'description'.
         
         NOTICIA ORIGINAL:
         Título: {title}
@@ -157,7 +199,6 @@ class IngestionService:
             )
             
             if response.status_code == 200:
-                import json
                 result = response.json()
                 refactored = json.loads(result["response"])
                 

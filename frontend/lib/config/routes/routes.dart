@@ -9,7 +9,9 @@ import 'package:news_app_clean_architecture/features/daily_news/presentation/pag
 import 'package:news_app_clean_architecture/features/daily_news/presentation/pages/publish_article/publish_article_page.dart';
 import 'package:news_app_clean_architecture/features/daily_news/presentation/pages/chatbot/owl_assistant_page.dart';
 import 'package:news_app_clean_architecture/features/daily_news/presentation/pages/topics/topics_page.dart';
+import 'package:news_app_clean_architecture/features/daily_news/presentation/pages/social/chat_room_page.dart';
 import 'package:news_app_clean_architecture/features/daily_news/presentation/pages/search/search_page.dart';
+import 'package:news_app_clean_architecture/features/daily_news/presentation/pages/pdf_viewer/pdf_viewer_page.dart';
 
 class AppRoutes {
   static Route onGenerateRoutes(RouteSettings settings) {
@@ -27,7 +29,7 @@ class AppRoutes {
         return _materialRoute(const RegisterPage());
 
       case '/Profile':
-        return _materialRoute(const ProfilePage());
+        return _materialRoute(ProfilePage(userId: settings.arguments as String?));
 
       case '/Topics':
         return _materialRoute(const TopicsPage());
@@ -46,6 +48,20 @@ class AppRoutes {
 
       case '/OwlAssistant':
         return _materialRoute(const OwlAssistantPage());
+
+      case '/ChatRoom':
+        final args = settings.arguments as Map<String, dynamic>;
+        return _materialRoute(ChatRoomPage(
+          receiverId: args['receiverId'],
+          receiverName: args['receiverName'],
+        ));
+        
+      case '/PdfViewer':
+        final args = settings.arguments as Map<String, dynamic>;
+        return _materialRoute(PdfViewerPage(
+          pdfUrl: args['pdfUrl'],
+          title: args['title'] ?? 'Documento PDF',
+        ));
         
       default:
         return _materialRoute(const DailyNews());

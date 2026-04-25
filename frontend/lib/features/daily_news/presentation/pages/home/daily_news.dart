@@ -2,14 +2,16 @@ import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 // Elegant Imports (Barrels)
 import 'package:news_app_clean_architecture/core/core.dart';
+import 'package:news_app_clean_architecture/features/auth/presentation/bloc/auth_cubit.dart';
 import 'package:news_app_clean_architecture/features/daily_news/domain/daily_news_domain.dart';
 import 'package:news_app_clean_architecture/features/daily_news/presentation/daily_news_presentation.dart';
 import 'package:news_app_clean_architecture/injection_container.dart';
 
-import 'package:news_app_clean_architecture/features/daily_news/data/data_sources/remote/reward_api_service.dart';
+
 
 class DailyNews extends StatefulWidget {
   const DailyNews({Key? key}) : super(key: key);
@@ -24,6 +26,7 @@ class _DailyNewsState extends State<DailyNews> {
   Timer? _visibilityTimer;
   String _assistantMessage = 'Hola, soy tu asistente Owl. Toca aquí para analizar noticias.';
   double _balance = 0.0;
+  bool _isNewspaperMode = false;
 
   @override
   void initState() {
@@ -34,13 +37,16 @@ class _DailyNewsState extends State<DailyNews> {
 
   void _fetchBalance() async {
     try {
-      final result = await sl<RewardApiService>().getBalance(kAlphaTesterId);
-
-      if (mounted) {
+      final authState = context.read<AuthCubit>().state;
+      if (authState is! Authenticated) return;
+      
+      final result = await sl<GetBalanceUseCase>().call(params: authState.user.uid);
+      if (mounted && result is DataSuccess) {
         setState(() {
-          _balance = (result['balance'] as num).toDouble();
+          _balance = result.data!;
         });
       }
+
     } catch (e) {
       debugPrint('Error fetching balance: $e');
     }
@@ -63,7 +69,7 @@ class _DailyNewsState extends State<DailyNews> {
       _visibilityTimer?.cancel();
     } else if (notification is ScrollEndNotification) {
       _visibilityTimer?.cancel();
-      _visibilityTimer = Timer(const Duration(seconds: 3), () {
+      _visibilityTimer = Timer(const Duration(seconds: 1), () {
         if (mounted) {
           setState(() {
             _isOwlVisible = true;
@@ -183,12 +189,36 @@ class _DailyNewsState extends State<DailyNews> {
                 child: ListView.builder(
                   controller: _scrollController,
                   padding: const EdgeInsets.only(bottom: 100),
-                  itemCount: (state.articles?.length ?? 0) + 1,
+                  itemCount: (_isNewspaperMode 
+                    ? state.articles!.where((a) => a.pdfPath != null).length 
+                    : (state.articles?.length ?? 0)) + 1,
                   itemBuilder: (context, index) {
-                    if (index == 0) {
-                      return const CtaBanner();
+                    final articles = _isNewspaperMode 
+                      ? state.articles!.where((a) => a.pdfPath != null).toList()
+                      : state.articles!;
+
+                    if (_isNewspaperMode && articles.isEmpty) {
+                      return const Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.print_disabled_outlined, size: 60, color: AppColors.textMuted),
+                            SizedBox(height: 16),
+                            Text('Aún no hay ediciones impresas listas.', style: TextStyle(color: AppColors.textMuted)),
+                          ],
+                        ),
+                      );
                     }
-                    final article = state.articles![index - 1];
+
+                    if (index == 0) {
+                      return _isNewspaperMode 
+                        ? const Padding(
+                            padding: EdgeInsets.all(16.0),
+                            child: Text('EDICIONES IMPRESAS (ANARCOTIMES)', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, letterSpacing: 2)),
+                          )
+                        : const CtaBanner();
+                    }
+                    final article = articles[index - 1];
                     return ArticleWidget(
                       article: article,
                       onArticlePressed: (article) => _onArticlePressed(context, article),
@@ -220,14 +250,18 @@ class _DailyNewsState extends State<DailyNews> {
       ),
       child: BottomNavigationBar(
         onTap: (index) {
-          if (index == 0) context.read<RemoteArticlesBloc>().add(const GetArticles());
+          if (index == 0) {
+            setState(() => _isNewspaperMode = false);
+            context.read<RemoteArticlesBloc>().add(const GetArticles());
+          }
           if (index == 1) _onTopicsPressed(context);
           if (index == 2) _onPublishPressed(context);
           if (index == 3) _onShowSavedArticlesViewTapped(context);
           if (index == 4) _onProfilePressed(context);
+          if (index == 5) _onNewspaperPressed(context);
         },
 
-        currentIndex: 0,
+        currentIndex: _isNewspaperMode ? 5 : 0,
         backgroundColor: AppColors.background,
         selectedItemColor: AppColors.primary,
         unselectedItemColor: AppColors.textMuted,
@@ -245,12 +279,22 @@ class _DailyNewsState extends State<DailyNews> {
           ),
           BottomNavigationBarItem(icon: Icon(Icons.bookmark_border), label: 'Guardado'),
           BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: 'Perfil'),
+          BottomNavigationBarItem(icon: Icon(Icons.newspaper), label: 'Periódico'),
         ],
       ),
     );
   }
 
-  void _onArticlePressed(BuildContext context, ArticleEntity article) {
+  void _onArticlePressed(BuildContext context, ArticleEntity article) async {
+    if (_isNewspaperMode && article.pdfPath != null) {
+      // OPEN PDF inside the app
+      Navigator.pushNamed(context, '/PdfViewer', arguments: {
+        'pdfUrl': article.pdfPath!,
+        'title': article.title ?? 'Edición Impresa',
+      });
+      return;
+    }
+    
     sl<AnalyticsRepository>().trackArticleView(article);
     Navigator.pushNamed(context, '/ArticleDetails', arguments: article);
   }
@@ -265,6 +309,26 @@ class _DailyNewsState extends State<DailyNews> {
 
   void _onProfilePressed(BuildContext context) {
     Navigator.pushNamed(context, '/Profile');
+  }
+  
+  void _onNewspaperPressed(BuildContext context) async {
+    setState(() => _isNewspaperMode = true);
+    
+    // Also trigger the generation in the backend so it's fresh
+    try {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Generando / Recuperando la edición de hoy...'),
+          backgroundColor: AppColors.primary,
+          duration: Duration(seconds: 2),
+        ),
+      );
+      await sl<GenerateDailyNewspaperUseCase>().call();
+      // Reload feed to show the newly generated newspaper if needed
+      context.read<RemoteArticlesBloc>().add(const GetArticles());
+    } catch (e) {
+      debugPrint('Error genereting newspaper: $e');
+    }
   }
 
   void _onTopicsPressed(BuildContext context) {
