@@ -11,6 +11,7 @@ import 'package:news_app_clean_architecture/features/daily_news/domain/repositor
 import 'package:news_app_clean_architecture/features/daily_news/data/repository/article_repository_impl.dart';
 import 'package:news_app_clean_architecture/features/daily_news/data/repository/reward_repository_impl.dart';
 import 'package:news_app_clean_architecture/features/daily_news/data/repository/storage_repository_impl.dart';
+import 'package:news_app_clean_architecture/features/daily_news/data/repository/chat_repository_impl.dart';
 
 void initDailyNewsDependencies(GetIt sl) {
   // Data Sources
@@ -22,6 +23,7 @@ void initDailyNewsDependencies(GetIt sl) {
   // Repositories
   sl.registerSingleton<StorageRepository>(StorageRepositoryImpl(sl()));
   sl.registerSingleton<RewardRepository>(RewardRepositoryImpl(sl()));
+  sl.registerSingleton<ChatRepository>(ChatRepositoryImpl(sl()));
   sl.registerSingleton<ArticleRepository>(
     ArticleRepositoryImpl(sl(), sl(), sl())
   );
@@ -35,6 +37,9 @@ void initDailyNewsDependencies(GetIt sl) {
   sl.registerSingleton<ClaimRewardUseCase>(ClaimRewardUseCase(sl()));
   sl.registerSingleton<GetBalanceUseCase>(GetBalanceUseCase(sl()));
   sl.registerSingleton<UploadImageUseCase>(UploadImageUseCase(sl()));
+  sl.registerSingleton<VoteArticleUseCase>(VoteArticleUseCase(sl()));
+  sl.registerSingleton<GenerateDailyNewspaperUseCase>(GenerateDailyNewspaperUseCase(sl()));
+  sl.registerSingleton<GetChatResponseUseCase>(GetChatResponseUseCase(sl()));
 
   // Blocs
   sl.registerFactory<RemoteArticlesBloc>(

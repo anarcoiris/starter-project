@@ -43,21 +43,21 @@ class ChatService {
 
   Future<String?> _getOllamaResponse(String baseUrl, List<Map<String, String>> messages, {required bool isRemote}) async {
     try {
-      final dio = Dio(BaseOptions(
-        baseUrl: baseUrl,
-        connectTimeout: Duration(seconds: isRemote ? 10 : 3),
-        receiveTimeout: Duration(seconds: isRemote ? 30 : 15),
-      ));
-
       developer.log('Petición a Ollama (${isRemote ? "Remoto" : "Local"}): $baseUrl', name: 'SymmetryChat');
 
-      final response = await dio.post(
-        'api/chat',
+      final url = baseUrl.endsWith('/') ? '${baseUrl}api/chat' : '$baseUrl/api/chat';
+
+      final response = await _dio.post(
+        url,
         data: {
           'model': 'qwen2.5:3b',
           'messages': messages,
           'stream': false,
         },
+        options: Options(
+          sendTimeout: Duration(seconds: isRemote ? 10 : 3),
+          receiveTimeout: Duration(seconds: isRemote ? 30 : 15),
+        )
       );
 
       if (response.statusCode == 200) {
@@ -75,20 +75,17 @@ class ChatService {
       if (apiKey == null || apiKey.isEmpty) {
         return "Servidores fuera de línea y sin API Key de respaldo.";
       }
-
-      final openAiDio = Dio(BaseOptions(
-        connectTimeout: const Duration(seconds: 10),
-        receiveTimeout: const Duration(seconds: 20),
-      ));
       
       final openAiMessages = [
         {'role': 'system', 'content': 'Eres el Owl Assistant de Symmetry. Responde de forma técnica y elegante.'},
         ...messages,
       ];
       
-      final response = await openAiDio.post(
+      final response = await _dio.post(
         'https://api.openai.com/v1/chat/completions',
         options: Options(
+          sendTimeout: const Duration(seconds: 10),
+          receiveTimeout: const Duration(seconds: 20),
           headers: {
             'Authorization': 'Bearer $apiKey',
             'Content-Type': 'application/json',

@@ -11,6 +11,8 @@ class ArticleBase(BaseModel):
     content: str
     publishedAt: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     category: str = "general"
+    upvotes: int = 0
+    downvotes: int = 0
 
 class ArticleCreate(ArticleBase):
     """Schema for creating a new article via API. 

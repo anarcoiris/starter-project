@@ -7,6 +7,7 @@ from typing import List, Optional
 import hashlib
 import json
 from aiokafka import AIOKafkaProducer
+from newspaper import Article as NArticle
 from app.repositories.article_repository import ArticleRepository
 from app.repositories.cache_repository import CacheRepository
 from app.models.article import Article, ArticleCreate
@@ -81,10 +82,26 @@ class IngestionService:
 
     async def _process_entry(self, client: httpx.AsyncClient, entry, source_name: str) -> Optional[Article]:
         title = entry.title
+        # Fallback if Newspaper fails
         summary_html = entry.get("summary", "") or entry.get("description", "")
         soup = BeautifulSoup(summary_html, "html.parser")
         description = soup.get_text()
-        content = description # RSS usually only has summary
+        content = description
+        url_to_image = None
+        
+        # Try newspaper3k to get full text
+        try:
+            n_article = NArticle(entry.link)
+            n_article.download()
+            n_article.parse()
+            if n_article.text and len(n_article.text) > 50:
+                content = n_article.text
+                if not description:
+                    description = content[:200] + "..."
+            if n_article.top_image:
+                url_to_image = n_article.top_image
+        except Exception as e:
+            logger.warning(f"Newspaper3k failed for {entry.link}: {e}")
         
         # 1. AI Refactoring with Ollama + Cache
         refactored = await self._refactor_with_ai(client, title, description)
@@ -107,7 +124,7 @@ class IngestionService:
                     url_to_image = enc.get("url")
                     break
 
-        # Method C: Parse from HTML summary/content
+        # Method B: Parse from HTML summary/content
         if not url_to_image:
             img_tag = soup.find("img")
             if img_tag and img_tag.get("src"):

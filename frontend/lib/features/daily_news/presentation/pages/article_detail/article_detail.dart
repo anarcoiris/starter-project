@@ -13,6 +13,7 @@ import 'package:news_app_clean_architecture/features/daily_news/presentation/blo
 import 'package:news_app_clean_architecture/core/constants/constants.dart';
 import 'package:news_app_clean_architecture/features/auth/presentation/bloc/auth_cubit.dart';
 import 'package:news_app_clean_architecture/features/daily_news/presentation/bloc/reward/reward_cubit.dart';
+import 'package:news_app_clean_architecture/features/daily_news/domain/usecases/vote_article.dart';
 import 'package:news_app_clean_architecture/features/daily_news/presentation/bloc/reward/reward_state.dart';
 
 
@@ -159,9 +160,9 @@ class ArticleDetailsView extends HookWidget {
           const SizedBox(height: 12),
           Row(
             children: [
-              _buildVoteButton(Ionicons.caret_up, AppColors.success, (article?.upvotes ?? 0).toString()),
+              _buildVoteButton(context, Ionicons.caret_up, AppColors.success, (article?.upvotes ?? 0).toString(), true),
               const SizedBox(width: 16),
-              _buildVoteButton(Ionicons.caret_down, AppColors.highlight, (article?.downvotes ?? 0).toString()),
+              _buildVoteButton(context, Ionicons.caret_down, AppColors.highlight, (article?.downvotes ?? 0).toString(), false),
               const Spacer(),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -182,13 +183,30 @@ class ArticleDetailsView extends HookWidget {
     );
   }
 
-  Widget _buildVoteButton(IconData icon, Color color, String count) {
+  Widget _buildVoteButton(BuildContext context, IconData icon, Color color, String count, bool isUpvote) {
     return StatefulBuilder(
       builder: (context, setState) {
         bool voted = false;
         return GestureDetector(
-          onTap: () {
-            if (!voted) setState(() => voted = true);
+          onTap: () async {
+            if (!voted) {
+              setState(() => voted = true);
+              final authState = context.read<AuthCubit>().state;
+              if (authState is Authenticated && article?.articleId != null) {
+                try {
+                  await sl<VoteArticleUseCase>().call(
+                    params: VoteParams(
+                      articleId: article!.articleId!, 
+                      userId: authState.user.uid, 
+                      isUpvote: isUpvote
+                    )
+                  );
+                } catch (e) {
+                  // Revert if error
+                  setState(() => voted = false);
+                }
+              }
+            }
           },
           child: Row(
             children: [

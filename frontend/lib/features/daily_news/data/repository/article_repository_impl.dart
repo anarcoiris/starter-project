@@ -98,4 +98,31 @@ class ArticleRepositoryImpl implements ArticleRepository {
   Future<void> saveArticle(ArticleEntity article) {
     return _appDatabase.articleDAO.insertArticle(ArticleModel.fromEntity(article));
   }
+
+  @override
+  Future<DataState<void>> voteArticle(String articleId, String userId, bool isUpvote) async {
+    try {
+      final vote = isUpvote ? 'up' : 'down';
+      final httpResponse = await _newsApiService.voteArticle(articleId, userId, vote);
+      if (httpResponse.response.statusCode == HttpStatus.ok) {
+        return DataSuccess(null);
+      }
+      return DataFailed(ServerFailure("Vote failed with status ${httpResponse.response.statusCode}"));
+    } catch (e) {
+      return DataFailed(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<DataState<String>> generateDailyNewspaper() async {
+    try {
+      final httpResponse = await _newsApiService.generateDailyNewspaper();
+      if (httpResponse.response.statusCode == HttpStatus.ok) {
+        return DataSuccess(httpResponse.data['articleId'] as String);
+      }
+      return DataFailed(ServerFailure("Generation failed with status ${httpResponse.response.statusCode}"));
+    } catch (e) {
+      return DataFailed(ServerFailure(e.toString()));
+    }
+  }
 }

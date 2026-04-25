@@ -10,9 +10,13 @@ export 'usecases/remove_article.dart';
 export 'usecases/claim_reward.dart';
 export 'usecases/get_balance.dart';
 export 'usecases/upload_image.dart';
+export 'usecases/vote_article.dart';
+export 'usecases/generate_daily_newspaper.dart';
+export 'usecases/get_chat_response.dart';
 
 // Repositories (Interface)
 export 'repository/article_repository.dart';
 export 'repository/reward_repository.dart';
 export 'repository/storage_repository.dart';
+export 'repository/chat_repository.dart';
 

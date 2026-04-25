@@ -124,24 +124,6 @@ class _DailyNewsState extends State<DailyNews> {
       actions: [
         _buildBalanceWidget(),
         IconButton(
-          onPressed: () {
-            setState(() {
-              _isNewspaperMode = !_isNewspaperMode;
-            });
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(_isNewspaperMode ? 'Modo Anarcotimes Activado' : 'Volviendo al Feed Normal'),
-                backgroundColor: AppColors.primary,
-                duration: const Duration(seconds: 1),
-              ),
-            );
-          },
-          icon: Icon(
-            _isNewspaperMode ? Icons.newspaper : Icons.newspaper_outlined,
-            color: _isNewspaperMode ? AppColors.primary : Colors.white,
-          ),
-        ),
-        IconButton(
           onPressed: () => Navigator.pushNamed(context, '/Search'),
           icon: const Icon(Icons.search, color: AppColors.primary),
         ),
@@ -268,14 +250,18 @@ class _DailyNewsState extends State<DailyNews> {
       ),
       child: BottomNavigationBar(
         onTap: (index) {
-          if (index == 0) context.read<RemoteArticlesBloc>().add(const GetArticles());
+          if (index == 0) {
+            setState(() => _isNewspaperMode = false);
+            context.read<RemoteArticlesBloc>().add(const GetArticles());
+          }
           if (index == 1) _onTopicsPressed(context);
           if (index == 2) _onPublishPressed(context);
           if (index == 3) _onShowSavedArticlesViewTapped(context);
           if (index == 4) _onProfilePressed(context);
+          if (index == 5) _onNewspaperPressed(context);
         },
 
-        currentIndex: 0,
+        currentIndex: _isNewspaperMode ? 5 : 0,
         backgroundColor: AppColors.background,
         selectedItemColor: AppColors.primary,
         unselectedItemColor: AppColors.textMuted,
@@ -293,6 +279,7 @@ class _DailyNewsState extends State<DailyNews> {
           ),
           BottomNavigationBarItem(icon: Icon(Icons.bookmark_border), label: 'Guardado'),
           BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: 'Perfil'),
+          BottomNavigationBarItem(icon: Icon(Icons.newspaper), label: 'Periódico'),
         ],
       ),
     );
@@ -322,6 +309,26 @@ class _DailyNewsState extends State<DailyNews> {
 
   void _onProfilePressed(BuildContext context) {
     Navigator.pushNamed(context, '/Profile');
+  }
+  
+  void _onNewspaperPressed(BuildContext context) async {
+    setState(() => _isNewspaperMode = true);
+    
+    // Also trigger the generation in the backend so it's fresh
+    try {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Generando / Recuperando la edición de hoy...'),
+          backgroundColor: AppColors.primary,
+          duration: Duration(seconds: 2),
+        ),
+      );
+      await sl<GenerateDailyNewspaperUseCase>().call();
+      // Reload feed to show the newly generated newspaper if needed
+      context.read<RemoteArticlesBloc>().add(const GetArticles());
+    } catch (e) {
+      debugPrint('Error genereting newspaper: $e');
+    }
   }
 
   void _onTopicsPressed(BuildContext context) {

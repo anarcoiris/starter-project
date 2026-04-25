@@ -11,6 +11,8 @@ python-multipart==0.0.9
 # RSS Ingestion (also needed by API for manual ingest endpoint)
 feedparser==6.0.10
 beautifulsoup4==4.12.3
+newspaper3k==0.2.8
+lxml_html_clean==0.1.1
 
 # Observability
 prometheus-fastapi-instrumentator==7.0.0

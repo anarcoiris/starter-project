@@ -79,3 +79,14 @@ class ArticleRepository:
             {"articleId": article_id},
             {"$set": {"pdfPath": pdf_path}}
         )
+
+    async def update_votes(self, article_id: str, up_change: int, down_change: int):
+        await self.collection.update_one(
+            {"articleId": article_id},
+            {
+                "$inc": {
+                    "upvotes": up_change,
+                    "downvotes": down_change
+                }
+            }
+        )
