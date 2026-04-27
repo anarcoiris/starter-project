@@ -1,4 +1,22 @@
 uncovernews.ddns.net {
+	# HLS Stream Proxy
+	handle_path /hls/* {
+		reverse_proxy mediamtx:8888
+		header {
+			Access-Control-Allow-Origin *
+			Access-Control-Allow-Methods "GET, OPTIONS"
+			Access-Control-Allow-Headers "*"
+		}
+	}
+
+	# Stream Web Page
+	handle /stream* {
+		root * /var/www/stream
+		uri strip_prefix /stream
+		file_server
+		header Cross-Origin-Opener-Policy same-origin-allow-popups
+	}
+
 	# Serve PDFs
 	handle_path /pdfs/* {
 		root * /app/exports/pdfs

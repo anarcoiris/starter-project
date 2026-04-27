@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Uncover News Live</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-color: #0a0a0a;
+      --accent-color: #ff3e3e;
+      --accent-hover: #e63535;
+      --text-color: #ffffff;
+      --glass-bg: rgba(255, 255, 255, 0.05);
+      --glass-border: rgba(255, 255, 255, 0.1);
+      --sidebar-width: 350px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      background: var(--bg-color);
+      color: var(--text-color);
+      font-family: 'Inter', sans-serif;
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: row;
+      overflow: hidden;
+    }
+
+    /* Main Content Area */
+    .main-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 2rem;
+      overflow-y: auto;
+      align-items: center;
+      position: relative;
+    }
+
+    .container {
+      max-width: 1000px;
+      width: 100%;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+    }
+
+    .live-dot {
+      width: 12px;
+      height: 12px;
+      background: var(--accent-color);
+      border-radius: 50%;
+      display: inline-block;
+      animation: pulse 1.5s infinite;
+      box-shadow: 0 0 10px var(--accent-color);
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.5); opacity: 0.5; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .video-wrapper {
+      position: relative;
+      background: black;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid var(--glass-border);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+      aspect-ratio: 16 / 9;
+    }
+
+    video {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    /* Chat Sidebar */
+    .chat-sidebar {
+      width: var(--sidebar-width);
+      background: rgba(15, 15, 15, 0.8);
+      backdrop-filter: blur(20px);
+      border-left: 1px solid var(--glass-border);
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.3s ease;
+    }
+
+    .chat-header {
+      padding: 1.5rem;
+      border-bottom: 1px solid var(--glass-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .chat-header h2 {
+      margin: 0;
+      font-size: 1.1rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    #messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .message {
+      display: flex;
+      gap: 10px;
+      animation: slideUp 0.3s ease-out;
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #333;
+    }
+
+    .msg-content {
+      flex: 1;
+    }
+
+    .msg-author {
+      font-size: 0.8rem;
+      font-weight: 700;
+      margin-bottom: 2px;
+      color: rgba(255, 255, 255, 0.5);
+    }
+
+    .msg-text {
+      font-size: 0.9rem;
+      line-height: 1.4;
+      word-break: break-word;
+    }
+
+    .chat-input-area {
+      padding: 1.5rem;
+      border-top: 1px solid var(--glass-border);
+    }
+
+    .login-overlay {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+      text-align: center;
+    }
+
+    .btn {
+      background: var(--accent-color);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+      width: 100%;
+    }
+
+    .btn:hover { background: var(--accent-hover); }
+
+    .chat-input {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--glass-border);
+      border-radius: 8px;
+      color: white;
+      padding: 12px;
+      width: 100%;
+      outline: none;
+      font-family: inherit;
+    }
+
+    .footer {
+      margin-top: 2rem;
+      font-size: 0.8rem;
+      opacity: 0.4;
+    }
+
+    /* Mobile adjustments */
+    @media (max-width: 900px) {
+      body { flex-direction: column; overflow-y: auto; }
+      .chat-sidebar { width: 100%; height: 500px; border-left: none; border-top: 1px solid var(--glass-border); }
+      .main-content { height: auto; flex: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="main-content">
+    <div class="container">
+      <h1><span class="live-dot"></span> EN DIRECTO</h1>
+
+      <div id="status-message" style="margin-bottom: 15px; font-size: 0.9rem; color: var(--accent-color);">
+        Esperando señal de video...
+      </div>
+
+      <div class="video-wrapper">
+        <video id="video" controls autoplay playsinline muted></video>
+      </div>
+
+      <div class="footer">
+        Powered by Uncover News Streaming Engine
+      </div>
+    </div>
+  </div>
+
+  <div class="chat-sidebar">
+    <div class="chat-header">
+      <h2>LIVE CHAT</h2>
+      <div id="user-container" style="display: flex; align-items: center; gap: 8px;">
+        <div id="user-info" style="font-size: 0.8rem; opacity: 0.6;"></div>
+        <button id="logout-btn" style="display: none; background: none; border: none; color: var(--accent-color); font-size: 0.7rem; cursor: pointer; padding: 0;">(Salir)</button>
+      </div>
+    </div>
+
+    <div id="messages">
+      <!-- Mensajes dinámicos -->
+    </div>
+
+    <div class="chat-input-area">
+      <div id="auth-section" class="login-overlay">
+        <p style="font-size: 0.85rem; opacity: 0.8; margin: 0;">Inicia sesión para participar</p>
+        <button id="login-btn" class="btn">Login con Google</button>
+      </div>
+      <div id="input-section" style="display: none;">
+        <form id="chat-form" style="display: flex; gap: 8px;">
+          <input type="text" id="chat-input" class="chat-input" placeholder="Escribe un mensaje..." autocomplete="off">
+          <button type="submit" class="btn" style="width: auto; padding: 10px 15px;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+  <!-- HLS SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+
+  <script>
+    // --- Configuración Firebase REAL ---
+    const firebaseConfig = {
+      apiKey: "AIzaSyAhIfNBWvNvkm_Cuws0J5dWYUIgPpnI0LU",
+      authDomain: "uncover-news-65751.firebaseapp.com",
+      projectId: "uncover-news-65751",
+      storageBucket: "uncover-news-65751.firebasestorage.app",
+      messagingSenderId: "570726082445",
+      appId: "1:570726082445:web:b7567fe9d9aabaaed8bfc4",
+      measurementId: "G-LLKPXN2S1D"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    // --- Elementos UI ---
+    const loginBtn = document.getElementById('login-btn');
+    const logoutBtn = document.getElementById('logout-btn');
+    const authSection = document.getElementById('auth-section');
+    const inputSection = document.getElementById('input-section');
+    const chatForm = document.getElementById('chat-form');
+    const chatInput = document.getElementById('chat-input');
+    const messagesDiv = document.getElementById('messages');
+    const userInfo = document.getElementById('user-info');
+    const video = document.getElementById('video');
+    const statusMsg = document.getElementById('status-message');
+
+    let currentUser = null;
+    let chatUnsubscribe = null;
+
+    // --- Autenticación ---
+    loginBtn.onclick = () => {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      auth.signInWithPopup(provider).catch(err => {
+        console.error("Error Login:", err);
+        alert("Error al iniciar sesión: " + err.message);
+      });
+    };
+
+    logoutBtn.onclick = () => {
+      auth.signOut().then(() => {
+        console.log("Sesión cerrada");
+        location.reload();
+      }).catch(err => {
+        console.error("Error al cerrar sesión:", err);
+      });
+    };
+
+    auth.onAuthStateChanged(user => {
+      console.log("Auth State Changed:", user ? `Logged in as ${user.displayName} (${user.uid})` : "Logged out");
+      
+      if (chatUnsubscribe) {
+        chatUnsubscribe();
+        chatUnsubscribe = null;
+      }
+
+      if (user) {
+        currentUser = user;
+        authSection.style.display = 'none';
+        inputSection.style.display = 'block';
+        logoutBtn.style.display = 'block';
+        userInfo.innerText = user.displayName;
+
+        // Iniciar escucha real con ordenamiento
+        chatUnsubscribe = db.collection('stream_chat').orderBy('timestamp', 'desc').limit(50).onSnapshot(snapshot => {
+          console.log("Mensajes recibidos:", snapshot.size);
+          messagesDiv.innerHTML = '';
+          snapshot.docs.reverse().forEach(doc => {
+            const data = doc.data();
+            const msgEl = document.createElement('div');
+            msgEl.className = 'message';
+            msgEl.innerHTML = `
+              <img src="${data.photo || 'https://via.placeholder.com/32'}" class="avatar">
+              <div class="msg-content">
+                <div class="msg-author">${data.author}</div>
+                <div class="msg-text">${data.text}</div>
+              </div>
+            `;
+            messagesDiv.appendChild(msgEl);
+          });
+          messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }, err => {
+          console.error("Error en el snapshot del chat:", err);
+          messagesDiv.innerHTML = `<div style="padding:20px; color:var(--accent-color); font-size:0.8rem; text-align:center;">
+            Error de conexión: ${err.message}<br>
+            <span style="opacity:0.5; font-size:0.7rem;">Code: ${err.code}</span>
+          </div>`;
+        });
+
+      } else {
+        currentUser = null;
+        authSection.style.display = 'flex';
+        inputSection.style.display = 'none';
+        logoutBtn.style.display = 'none';
+        userInfo.innerText = '';
+        messagesDiv.innerHTML = '<p style="text-align:center; opacity:0.5; margin-top:20px;">Inicia sesión para participar</p>';
+      }
+    });
+
+    // --- Chat Logic ---
+    const sendMessage = async () => {
+      const text = chatInput.value.trim();
+      if (!text || !currentUser) return;
+
+      console.log("Enviando mensaje a Firestore...");
+
+      try {
+        await db.collection('stream_chat').add({
+          text: text,
+          author: currentUser.displayName,
+          photo: currentUser.photoURL,
+          uid: currentUser.uid,
+          timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        chatInput.value = '';
+      } catch (err) {
+        console.error("Error al enviar:", err);
+        alert("No tienes permisos para escribir. Revisa las reglas de Firestore.");
+      }
+    };
+
+    chatForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      sendMessage();
+    });
+
+    // --- Video Logic ---
+    const videoSrc = '/hls/stream/index.m3u8';
+    let hls = null;
+
+    function startStream() {
+      if (Hls.isSupported()) {
+        if (hls) hls.destroy();
+        hls = new Hls({
+          manifestLoadingRetryDelay: 2000,
+          manifestLoadingMaxRetry: 20
+        });
+        hls.loadSource(videoSrc);
+        hls.attachMedia(video);
+        
+        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+          statusMsg.innerText = "¡Señal recibida! Reproduciendo...";
+          statusMsg.style.color = "#4ade80";
+          video.play();
+        });
+
+        hls.on(Hls.Events.ERROR, (event, data) => {
+          if (data.details === 'manifestLoadError') {
+            statusMsg.innerText = "Esperando señal... (Asegúrate de que OBS esté transmitiendo)";
+            statusMsg.style.color = "#ff3e3e";
+          }
+        });
+      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        video.src = videoSrc;
+      }
+    }
+
+    startStream();
+    setInterval(() => {
+      if (hls && hls.stats && hls.stats.loading.start === 0) startStream();
+    }, 5000);
+  </script>
+</body>
+</html>

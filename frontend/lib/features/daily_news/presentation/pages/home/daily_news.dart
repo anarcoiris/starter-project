@@ -124,6 +124,27 @@ class _DailyNewsState extends State<DailyNews> {
       actions: [
         _buildBalanceWidget(),
         IconButton(
+          onPressed: () => Navigator.pushNamed(context, '/LiveStream'),
+          icon: Stack(
+            alignment: Alignment.center,
+            children: [
+              const Icon(Icons.live_tv, color: AppColors.primary),
+              Positioned(
+                top: 0,
+                right: 0,
+                child: Container(
+                  width: 8,
+                  height: 8,
+                  decoration: const BoxDecoration(
+                    color: AppColors.highlight,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        IconButton(
           onPressed: () => Navigator.pushNamed(context, '/Search'),
           icon: const Icon(Icons.search, color: AppColors.primary),
         ),

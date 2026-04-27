@@ -23,6 +23,8 @@ services:
   ollama:
     image: ollama/ollama:latest
     container_name: symmetry_ollama
+    ports:
+      - "11434:11434"
     volumes:
       - symmetry_ollama_data:/root/.ollama
     environment:
@@ -69,8 +71,19 @@ services:
       - caddy_data:/data
       - caddy_config:/config
       - ./exports/pdfs:/app/exports/pdfs:ro
+      - ./www/stream:/var/www/stream:ro
     depends_on:
       - api
+      - mediamtx
+
+  mediamtx:
+    image: bluenviron/mediamtx:latest
+    container_name: symmetry_mediamtx
+    ports:
+      - "1935:1935"   # RTMP
+      - "8554:8554"   # RTSP
+      - "8888:8888"   # HLS (Optional to expose, Caddy proxies it)
+    restart: unless-stopped
 
   ollama-init:
     image: curlimages/curl:latest

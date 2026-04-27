@@ -12,6 +12,7 @@ import 'package:news_app_clean_architecture/features/daily_news/presentation/pag
 import 'package:news_app_clean_architecture/features/daily_news/presentation/pages/social/chat_room_page.dart';
 import 'package:news_app_clean_architecture/features/daily_news/presentation/pages/search/search_page.dart';
 import 'package:news_app_clean_architecture/features/daily_news/presentation/pages/pdf_viewer/pdf_viewer_page.dart';
+import 'package:news_app_clean_architecture/features/live_stream/presentation/pages/live_stream_page.dart';
 
 class AppRoutes {
   static Route onGenerateRoutes(RouteSettings settings) {
@@ -61,6 +62,11 @@ class AppRoutes {
         return _materialRoute(PdfViewerPage(
           pdfUrl: args['pdfUrl'],
           title: args['title'] ?? 'Documento PDF',
+        ));
+        
+      case '/LiveStream':
+        return _materialRoute(const LiveStreamPage(
+          streamUrl: 'https://uncovernews.ddns.net/hls/stream/index.m3u8',
         ));
         
       default:
